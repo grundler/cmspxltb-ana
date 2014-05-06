@@ -20,7 +20,7 @@ public:
    tbAna(int dutID, string board, int spill0, int spill1);
    ~tbAna();
    
-   void plotEffVsIntensity(TCut myCut="");
+   void analyze(TCut myCut="");
 
    bool initSpill(int spill);
 
@@ -57,6 +57,7 @@ private:
    //vs flux
    // TH1F *h_tracksIntensity, *h_hitsIntensity;
    TH1F *h_effFlux[2]; //tracks, hits per flux to do efficiency
+   TH1F *h_effNHits[2]; //tracks, hits vs number of pixel hits
 
    //vs spill
    // TH1F *h_tracksRun, *h_hitsRun;
@@ -81,7 +82,7 @@ private:
    Int_t Ndf;
    Float_t Chi2;
    Int_t nTrack;
-   Double_t nhits_7;
+   Double_t nhits_0, nhits_1, nhits_2, nhits_3, nhits_4, nhits_5, nhits_6, nhits_7;
 
 };
 

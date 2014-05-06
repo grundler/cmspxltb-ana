@@ -48,7 +48,7 @@ tbAna::~tbAna() {
    }
 }
 
-void tbAna::plotEffVsIntensity(TCut myCut) {
+void tbAna::analyze(TCut myCut) {
 
    int maxFlux = 0.;
 
@@ -77,12 +77,6 @@ void tbAna::plotEffVsIntensity(TCut myCut) {
          _trackTree->Draw(var,bCut, "goff");
          TH1F *h = (TH1F*) gDirectory->Get(hh);
 
-         // TCanvas *c = new TCanvas("c","",800,600);
-         // h->Draw();
-         // c->Print(Form("res%s_spill%d.pdf",D[iD],iSpill));
-
-         // cout << h->GetMean() << " " << h->GetRMS() << endl;
-                  
          h_resSpill[iD][0]->Fill(iSpill, h->GetMean());
          h_resSpill[iD][1]->Fill(iSpill, h->GetRMS());
       }
@@ -107,11 +101,12 @@ void tbAna::plotEffVsIntensity(TCut myCut) {
          int flux = _tc->getFlux(qieevt);
 
          // cout << "\tiEvt " << iEvt << " qieevt " << qieevt << " flux " << flux << endl;
+         if(flux < 0.)
+            continue;
 
          //Track has passed, fill track-level information
-         if(flux > -1) {
-            h_effFlux[0]->Fill(flux);
-         }
+         h_effFlux[0]->Fill(flux);
+         h_effNHits[0]->Fill(nhits_4);
          h_effSpill[0]->Fill(iSpill);
 
          if(flux > maxFlux) 
@@ -120,9 +115,8 @@ void tbAna::plotEffVsIntensity(TCut myCut) {
          //If hit on track, fill hit-level information
          if(goodHits->Contains(entry)) {
             // cout << "\t\t\tgoodHit\n";
-            if(flux > -1) {
-               h_effFlux[1]->Fill(flux);
-            }
+            h_effFlux[1]->Fill(flux);
+            h_effNHits[1]->Fill(nhits_4);
             h_effSpill[1]->Fill(iSpill);
          }
 
@@ -139,6 +133,11 @@ void tbAna::plotEffVsIntensity(TCut myCut) {
    effVsFlux->BayesDivide(h_effFlux[1],h_effFlux[0]);
    TCanvas *c = new TCanvas("c1","", 800,600);
    effVsFlux->Draw();
+
+   TGraphAsymmErrors *effVsNHits = new TGraphAsymmErrors();
+   effVsNHits->BayesDivide(h_effNHits[1],h_effNHits[0]);
+   c = new TCanvas("c1","", 800,600);
+   effVsNHits->Draw();
 
    TGraphAsymmErrors *effVsSpill = new TGraphAsymmErrors();
    effVsSpill->BayesDivide(h_effSpill[1],h_effSpill[0]);
@@ -364,26 +363,34 @@ void tbAna::initTrackTree(int spill) {
    _trackTree->SetBranchStatus("nTrack",kTRUE);
    _trackTree->SetBranchStatus("Ndf",kTRUE);
    _trackTree->SetBranchStatus("Chi2",kTRUE);
-   _trackTree->SetBranchStatus("nhits_7",kTRUE);
+   _trackTree->SetBranchStatus("nhits_*",kTRUE);
 
    _trackTree->SetBranchAddress("RunNr", &RunNr);
    _trackTree->SetBranchAddress("EvtNr", &EvtNr);
    _trackTree->SetBranchAddress("fitX_0", &fitX_0);
    _trackTree->SetBranchAddress("fitY_0", &fitY_0);
+   _trackTree->SetBranchAddress("nhits_0", &nhits_0);
    _trackTree->SetBranchAddress("fitX_1", &fitX_1);
    _trackTree->SetBranchAddress("fitY_1", &fitY_1);
+   _trackTree->SetBranchAddress("nhits_1", &nhits_1);
    _trackTree->SetBranchAddress("fitX_2", &fitX_2);
    _trackTree->SetBranchAddress("fitY_2", &fitY_2);
+   _trackTree->SetBranchAddress("nhits_2", &nhits_2);
    _trackTree->SetBranchAddress("fitX_3", &fitX_3);
    _trackTree->SetBranchAddress("fitY_3", &fitY_3);
+   _trackTree->SetBranchAddress("nhits_3", &nhits_3);
    _trackTree->SetBranchAddress("fitX_4", &fitX_4);
    _trackTree->SetBranchAddress("fitY_4", &fitY_4);
+   _trackTree->SetBranchAddress("nhits_4", &nhits_4);
    _trackTree->SetBranchAddress("fitX_5", &fitX_5);
    _trackTree->SetBranchAddress("fitY_5", &fitY_5);
+   _trackTree->SetBranchAddress("nhits_5", &nhits_5);
    _trackTree->SetBranchAddress("fitX_6", &fitX_6);
    _trackTree->SetBranchAddress("fitY_6", &fitY_6);
+   _trackTree->SetBranchAddress("nhits_6", &nhits_6);
    _trackTree->SetBranchAddress("fitX_7", &fitX_7);
    _trackTree->SetBranchAddress("fitY_7", &fitY_7);
+   _trackTree->SetBranchAddress("nhits_7", &nhits_7);
    _trackTree->SetBranchAddress("dutX", &dutX);
    _trackTree->SetBranchAddress("dutY", &dutY);
    _trackTree->SetBranchAddress("nTrack", &nTrack);
@@ -414,6 +421,10 @@ void tbAna::bookHistos() {
       sprintf(title, "%s vs flux",suffix);
       //h_effFlux[i] = new TH1F(name, title, nIntBins, intHist);
       h_effFlux[i] = new TH1F(name, title, 100, 0., 3000.);
+
+      sprintf(name, "h_effNHits_%s",suffix);
+      sprintf(title, "%s vs pixel hits",suffix);
+      h_effNHits[i] = new TH1F(name, title, 100, -0.5, 99.5);
 
       sprintf(name, "h_effSpill_%s",suffix);
       sprintf(title, "%s vs spill",suffix);
