@@ -134,7 +134,7 @@ treeCorrelator::treeCorrelator(int spill, string board)
    int previousDiff = -999;
    for(int itimestamp=0;itimestamp<tree->GetEntries();itimestamp++) {
       tree->GetEntry(itimestamp);
-      if(itimestamp%100==0) 
+      if(itimestamp%1000==0) 
          printf("\t\ttreeCorrelator on %1.3f %% (%i th : %i)\r",100.*itimestamp/tree->GetEntries(), itimestamp, TimeStamp);
       if(TimeStampOffset!=-1&&(TimeStamp - TimeStampOffset)>=0) {
           
@@ -225,8 +225,13 @@ int treeCorrelator::getFlux(int trigCount) {
 
 int treeCorrelator::calcFlux() {
 
-   float rg6 = 0.6755;
-   float rg5 = 0.7517;
+   float qb6 = 0.6755; //qie coverage of beam in x (6mm width)
+   float qb5 = 0.7517; //qie coverage of beam in y (5mm width)
+
+   float rbx = 0.495; //fraction of beam seen by roc in x
+   float rby = 0.576; //fraction of beam seen by roc in y
+   float dx = 0.8; //width of roc in x
+   float dy = 0.8; //width of roc in y
 
    float nproton = summary_Trigger_Nproton 
       + summary_Trigger_Nproton_minusWBC
@@ -234,7 +239,8 @@ int treeCorrelator::calcFlux() {
 
    nproton /= (_nBuckets*2.-1.);
 
-   float flux = nproton * (fnalClock/tbClock) * tbClock/rg6/rg5;
+   //get flux by normalizing the number of protons by FNAL clock, qie scintillator coverage, and roc coverage
+   float flux = nproton * (fnalClock/qb6/qb5) * (rbx*rby/dx/dy);
 
    return flux;
 }

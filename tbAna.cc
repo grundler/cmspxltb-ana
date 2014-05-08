@@ -443,7 +443,7 @@ void tbAna::bookHistos() {
          sprintf(name, "h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs flux (WBC %d)",suffix, WBCvalue[iwbc]);
          //h_effFlux[iwbc][i] = new TH1F(name, title, nIntBins, intHist);
-         h_effFlux[iwbc][i] = new TH1F(name, title, 100, 0., 3000.);
+         h_effFlux[iwbc][i] = new TH1F(name, title, 200, 0., 1000.);
 
          sprintf(name, "h_effNHits_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs pixel hits (WBC %d)",suffix,WBCvalue[iwbc]);
