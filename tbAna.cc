@@ -1,5 +1,5 @@
 #include "tbAna.hh"
-#include "constants.hh"
+#include "treeCorrelator.hh"
 
 #include <cstring>
 #include <iostream>
@@ -40,12 +40,14 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1)
 tbAna::~tbAna() {
    delete _trackTree;
 
-   for(int i=0; i<2; i++) {
-      delete h_effFlux[i];
-      delete h_effSpill[i];
-
-      delete h_resSpill[i];
-   }
+   for(int iwbc=0; iwbc<nWBC; iwbc++)
+      for(int i=0; i<2; i++) {
+         delete h_effFlux[iwbc][i];
+         delete h_effNHits[iwbc][i];
+         delete h_effSpill[iwbc][i];
+         
+         delete h_resSpill[iwbc][i];
+      }
 }
 
 void tbAna::analyze(TCut myCut) {
@@ -77,8 +79,10 @@ void tbAna::analyze(TCut myCut) {
          _trackTree->Draw(var,bCut, "goff");
          TH1F *h = (TH1F*) gDirectory->Get(hh);
 
-         h_resSpill[iD][0]->Fill(iSpill, h->GetMean());
-         h_resSpill[iD][1]->Fill(iSpill, h->GetRMS());
+         h_resSpill[_wbcBin][iD][0]->SetBinContent(1+iSpill-_firstSpill, h->GetMean());
+         h_resSpill[_wbcBin][iD][0]->SetBinError(1+iSpill-_firstSpill, h->GetMeanError());
+         h_resSpill[_wbcBin][iD][1]->SetBinContent(1+iSpill-_firstSpill, h->GetRMS());
+         h_resSpill[_wbcBin][iD][1]->SetBinError(1+iSpill-_firstSpill, h->GetRMSError());
       }
 
       cout << "\tgoodTracks: " << goodTracks->GetN() << endl;
@@ -105,9 +109,9 @@ void tbAna::analyze(TCut myCut) {
             continue;
 
          //Track has passed, fill track-level information
-         h_effFlux[0]->Fill(flux);
-         h_effNHits[0]->Fill(nhits_4);
-         h_effSpill[0]->Fill(iSpill);
+         h_effFlux[_wbcBin][0]->Fill(flux);
+         h_effNHits[_wbcBin][0]->Fill(nhits_4);
+         h_effSpill[_wbcBin][0]->Fill(iSpill);
 
          if(flux > maxFlux) 
             maxFlux = flux;
@@ -115,9 +119,9 @@ void tbAna::analyze(TCut myCut) {
          //If hit on track, fill hit-level information
          if(goodHits->Contains(entry)) {
             // cout << "\t\t\tgoodHit\n";
-            h_effFlux[1]->Fill(flux);
-            h_effNHits[1]->Fill(nhits_4);
-            h_effSpill[1]->Fill(iSpill);
+            h_effFlux[_wbcBin][1]->Fill(flux);
+            h_effNHits[_wbcBin][1]->Fill(nhits_4);
+            h_effSpill[_wbcBin][1]->Fill(iSpill);
          }
 
       }
@@ -127,29 +131,32 @@ void tbAna::analyze(TCut myCut) {
    }
 
    cout << "max flux seen: " << maxFlux << endl;
-   cout << "h_tracksFlux overflow: " << h_effFlux[0]->GetBinContent(h_effFlux[0]->GetNbinsX()+1) << endl;
-   cout << "h_hitsFlux overflow: " << h_effFlux[1]->GetBinContent(h_effFlux[1]->GetNbinsX()+1) << endl;
-   TGraphAsymmErrors *effVsFlux = new TGraphAsymmErrors();
-   effVsFlux->BayesDivide(h_effFlux[1],h_effFlux[0]);
-   TCanvas *c = new TCanvas("c1","", 800,600);
-   effVsFlux->Draw();
 
-   TGraphAsymmErrors *effVsNHits = new TGraphAsymmErrors();
-   effVsNHits->BayesDivide(h_effNHits[1],h_effNHits[0]);
-   c = new TCanvas("c1","", 800,600);
-   effVsNHits->Draw();
+   ostringstream stream;
+   stream << "output_" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill << ".root";
+   string filename = stream.str();
 
-   TGraphAsymmErrors *effVsSpill = new TGraphAsymmErrors();
-   effVsSpill->BayesDivide(h_effSpill[1],h_effSpill[0]);
-   c = new TCanvas("c2","", 800,600);
-   effVsSpill->Draw();
+   TFile *f = new TFile(filename.c_str(),"recreate");
 
-   for(int iD=0; iD<nD; iD++) {
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      g_effFlux[iwbc]->BayesDivide(h_effFlux[iwbc][1],h_effFlux[iwbc][0]);
+      g_effNHits[iwbc]->BayesDivide(h_effNHits[iwbc][1],h_effNHits[iwbc][0]);
+      g_effSpill[iwbc]->BayesDivide(h_effSpill[iwbc][1],h_effSpill[iwbc][0]);
+
+      g_effFlux[iwbc]->Write();
+      g_effNHits[iwbc]->Write();
+      g_effSpill[iwbc]->Write();
+
       for(int i=0; i<2; i++) {
-         c = new TCanvas(Form("c%d",3+iD*2+i),"", 800, 600);
-         h_resSpill[iD][i]->Draw();
+         h_effFlux[iwbc][i]->Write();
+         h_effNHits[iwbc][i]->Write();
+         h_effSpill[iwbc][i]->Write();
+         for(int iD=0; iD<nD; iD++) {
+            h_resSpill[iwbc][iD][i]->Write();
+         }
       }
    }
+   f->Close();
 }
 
 
@@ -181,6 +188,21 @@ bool tbAna::initSpill(int spill) {
    _tc = new treeCorrelator(spill,_testBoard);
    if(!_tc->isInitialized())
       return false;
+
+   //get WBC;
+   _wbcBin=-1;
+   int wbc=_tc->getWBC();
+   cout << "  WBC=" << wbc << endl;
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      if(wbc == WBCvalue[iwbc]) {
+         _wbcBin=iwbc;
+         break;
+      }
+   }
+   if(_wbcBin < 0) {
+      cout << "\tCould not find proper WBC value for spill " << spill << ". Found WBC=" << wbc << ". Skipping\n";
+      return false;
+   }
 
    //Set one more cut
    if(!setTriggerPhaseCut())
@@ -413,31 +435,52 @@ void tbAna::bookHistos() {
    int nSpills = 1+_finalSpill-_firstSpill;
 
    char suffix[16];
-   for(int i=0; i<2; i++) { //loop over histograms (usually tracks and hits, for efficiency)
-      if(0==i) sprintf(suffix, "tracks");
-      else     sprintf(suffix, "hits");
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      for(int i=0; i<2; i++) { //loop over histograms (usually tracks and hits, for efficiency)
+         if(0==i) sprintf(suffix, "tracks");
+         else     sprintf(suffix, "hits");
 
-      sprintf(name, "h_effFlux_%s",suffix);
-      sprintf(title, "%s vs flux",suffix);
-      //h_effFlux[i] = new TH1F(name, title, nIntBins, intHist);
-      h_effFlux[i] = new TH1F(name, title, 100, 0., 3000.);
+         sprintf(name, "h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s vs flux (WBC %d)",suffix, WBCvalue[iwbc]);
+         //h_effFlux[iwbc][i] = new TH1F(name, title, nIntBins, intHist);
+         h_effFlux[iwbc][i] = new TH1F(name, title, 100, 0., 3000.);
 
-      sprintf(name, "h_effNHits_%s",suffix);
-      sprintf(title, "%s vs pixel hits",suffix);
-      h_effNHits[i] = new TH1F(name, title, 100, -0.5, 99.5);
+         sprintf(name, "h_effNHits_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s vs pixel hits (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_effNHits[iwbc][i] = new TH1F(name, title, 100, -0.5, 99.5);
 
-      sprintf(name, "h_effSpill_%s",suffix);
-      sprintf(title, "%s vs spill",suffix);
-      h_effSpill[i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+         sprintf(name, "h_effSpill_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s vs spill (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_effSpill[iwbc][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
 
-      if(0==i) sprintf(suffix, "mean");
-      else     sprintf(suffix, "sigma");
+         if(0==i) sprintf(suffix, "mean");
+         else     sprintf(suffix, "sigma");
 
-      for(int iD=0; iD<nD; iD++) {
-         sprintf(name, "h_res%sSpill_%s",D[iD],suffix);
-         sprintf(title, "%s residual %s vs spill",D[iD],suffix);
-         h_resSpill[iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+         for(int iD=0; iD<nD; iD++) {
+            sprintf(name, "h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix);
+            sprintf(title, "%s residual %s vs spill (WBC %d)",D[iD],suffix,WBCvalue[iwbc]);
+            h_resSpill[iwbc][iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+         }
       }
+
+      sprintf(name, "g_effFlux_wbc%d", WBCvalue[iwbc]);
+      sprintf(title, "Efficiency vs flux (WBC %d)", WBCvalue[iwbc]);
+      g_effFlux[iwbc] = new TGraphAsymmErrors();
+      g_effFlux[iwbc]->SetName(name);
+      g_effFlux[iwbc]->SetTitle(title);
+
+      sprintf(name, "g_effNHits_wbc%d", WBCvalue[iwbc]);
+      sprintf(title, "Efficiency vs pixel hits (WBC %d)", WBCvalue[iwbc]);
+      g_effNHits[iwbc] = new TGraphAsymmErrors();
+      g_effNHits[iwbc]->SetName(name);
+      g_effNHits[iwbc]->SetTitle(title);
+
+      sprintf(name, "g_effSpill_wbc%d", WBCvalue[iwbc]);
+      sprintf(title, "Efficiency vs spill (WBC %d)", WBCvalue[iwbc]);
+      g_effSpill[iwbc] = new TGraphAsymmErrors();
+      g_effSpill[iwbc]->SetName(name);
+      g_effSpill[iwbc]->SetTitle(title);
+
    }
 
 }

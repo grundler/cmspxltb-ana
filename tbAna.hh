@@ -2,9 +2,11 @@
 #include <TChain.h>
 #include <TMath.h>
 
-#include "treeCorrelator.hh"
+#include "constants.hh"
 
+class treeCorrelator;
 class TH1F;
+class TGraphAsymmErrors;
 
 using std::string;
 using std::vector;
@@ -44,6 +46,7 @@ private:
 
    //Info to correlate QIE and telescope data
    treeCorrelator* _tc;
+   int _wbcBin;
 
    //Predefined cuts
    TCut chi2_50, chi2_600;
@@ -55,15 +58,16 @@ private:
    //Histograms and graphs
 
    //vs flux
-   // TH1F *h_tracksIntensity, *h_hitsIntensity;
-   TH1F *h_effFlux[2]; //tracks, hits per flux to do efficiency
-   TH1F *h_effNHits[2]; //tracks, hits vs number of pixel hits
+   TH1F *h_effFlux[nWBC][2]; //tracks, hits per flux to do efficiency
+   TH1F *h_effNHits[nWBC][2]; //tracks, hits vs number of pixel hits
+   TGraphAsymmErrors *g_effFlux[nWBC];
+   TGraphAsymmErrors *g_effNHits[nWBC];
 
    //vs spill
-   // TH1F *h_tracksRun, *h_hitsRun;
-   TH1F *h_effSpill[2]; //tracks, hits per spill to do spill-by-spill efficiency
+   TH1F *h_effSpill[nWBC][2]; //tracks, hits per spill to do spill-by-spill efficiency
+   TGraphAsymmErrors *g_effSpill[nWBC];
 
-   TH1F *h_resSpill[nD][2]; //mean and sigma of residuals per spill 
+   TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
 
    //Tree information
 
