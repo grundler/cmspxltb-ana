@@ -108,6 +108,8 @@ void tbAna::analyze(TCut myCut) {
          if(flux < 0.)
             continue;
 
+         //add ratio cut?
+
          //Track has passed, fill track-level information
          h_effFlux[_wbcBin][0]->Fill(flux);
          h_effNHits[_wbcBin][0]->Fill(nhits_4);
@@ -162,8 +164,8 @@ void tbAna::analyze(TCut myCut) {
 
 void tbAna::loadTrackEntry(int entry) {
 
-   int lflag = _trackTree->LoadTree(entry);
-   _trackTree->GetBranch("EvtNr")->GetEntry(lflag);
+   _trackTree->LoadTree(entry);
+   _trackTree->GetEntry(entry);
  
 }
 
