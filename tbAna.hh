@@ -23,10 +23,9 @@ public:
    ~tbAna();
    
    void analyze(TCut myCut="");
+   void makePlots();
 
    bool initSpill(int spill);
-
-   void bookHistos();
 
 private:
 
@@ -35,8 +34,9 @@ private:
    bool setTriggerPhaseCut();
 
    void initTrackTree(int spill);
-
    void loadTrackEntry(int entry);
+
+   void bookHistos();
 
    //Basic information
    const string _testBoard;
