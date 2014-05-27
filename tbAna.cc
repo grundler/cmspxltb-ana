@@ -117,6 +117,11 @@ void tbAna::analyze(TCut myCut) {
          h_effNHits[_wbcBin][0]->Fill(nhits_4);
          h_effSpill[_wbcBin][0]->Fill(iSpill);
 
+         float dutFitX=-999., dutFitY=-999.;
+         getDUTFitPosition(dutFitX, dutFitY);
+
+         h_effMap[_wbcBin][0]->Fill(dutFitX, dutFitY);
+
          if(flux > maxFlux) 
             maxFlux = flux;
 
@@ -126,6 +131,8 @@ void tbAna::analyze(TCut myCut) {
             h_effFlux[_wbcBin][1]->Fill(flux);
             h_effNHits[_wbcBin][1]->Fill(nhits_4);
             h_effSpill[_wbcBin][1]->Fill(iSpill);
+
+            h_effMap[_wbcBin][1]->Fill(dutFitX, dutFitY);
          }
 
       }
@@ -147,6 +154,8 @@ void tbAna::analyze(TCut myCut) {
       g_effNHits[iwbc]->BayesDivide(h_effNHits[iwbc][1],h_effNHits[iwbc][0]);
       g_effSpill[iwbc]->BayesDivide(h_effSpill[iwbc][1],h_effSpill[iwbc][0]);
 
+      h_effMap[iwbc][2]->Divide(h_effMap[iwbc][1],h_effMap[iwbc][0],1,1,"B");
+
       g_effFlux[iwbc]->Write();
       g_effNHits[iwbc]->Write();
       g_effSpill[iwbc]->Write();
@@ -155,6 +164,9 @@ void tbAna::analyze(TCut myCut) {
          h_effFlux[iwbc][i]->Write();
          h_effNHits[iwbc][i]->Write();
          h_effSpill[iwbc][i]->Write();
+         h_effMap[iwbc][i]->Write();
+         if(1==i)
+            h_effMap[iwbc][2]->Write();
          for(int iD=0; iD<nD; iD++) {
             h_resSpill[iwbc][iD][i]->Write();
          }
@@ -245,6 +257,34 @@ void tbAna::loadTrackEntry(int entry) {
    _trackTree->LoadTree(entry);
    _trackTree->GetEntry(entry);
  
+}
+
+void tbAna::getDUTFitPosition(float &posX, float &posY) {
+   if(_DUTID == 0) {
+      posX = fitX_0;      posY = fitY_0;
+   }
+   else if(_DUTID == 1) {
+      posX = fitX_1;      posY = fitY_1;
+   }
+   else if(_DUTID == 2) {
+      posX = fitX_2;      posY = fitY_2;
+   }
+   else if(_DUTID == 3) {
+      posX = fitX_3;      posY = fitY_3;
+   }
+   else if(_DUTID == 4) {
+      posX = fitX_4;      posY = fitY_4;
+   }
+   else if(_DUTID == 5) {
+      posX = fitX_5;      posY = fitY_5;
+   }
+   else if(_DUTID == 6) {
+      posX = fitX_6;      posY = fitY_6;
+   }
+   else if(_DUTID == 7) {
+      posX = fitX_7;      posY = fitY_7;
+   }
+
 }
 
 bool tbAna::initSpill(int spill) {
@@ -532,6 +572,15 @@ void tbAna::bookHistos() {
          sprintf(name, "h_effSpill_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs spill (WBC %d)",suffix,WBCvalue[iwbc]);
          h_effSpill[iwbc][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+
+         sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_effMap[iwbc][i] = new TH2F(name, title, 100, -8.,8.,160,-8.,8.);
+         if(0==i) {
+            sprintf(name, "h_effMap_wbc%d",WBCvalue[iwbc]);
+            sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
+            h_effMap[iwbc][2] = new TH2F(name, title, 100, -8.,8.,160,-8.,8.);
+         }
 
          if(0==i) sprintf(suffix, "mean");
          else     sprintf(suffix, "sigma");

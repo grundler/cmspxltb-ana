@@ -6,6 +6,7 @@
 
 class treeCorrelator;
 class TH1F;
+class TH2F;
 class TGraphAsymmErrors;
 
 using std::string;
@@ -35,6 +36,8 @@ private:
 
    void initTrackTree(int spill);
    void loadTrackEntry(int entry);
+
+   void getDUTFitPosition(float &posX, float &posY);
 
    void bookHistos();
 
@@ -68,6 +71,9 @@ private:
    TGraphAsymmErrors *g_effSpill[nWBC];
 
    TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
+
+   //geometrical
+   TH2F *h_effMap[nWBC][3]; //tracks/hits/efficiency maps
 
    //Tree information
 
