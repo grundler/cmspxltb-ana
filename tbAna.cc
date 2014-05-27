@@ -177,23 +177,26 @@ void tbAna::analyze(TCut myCut) {
 
 void tbAna::makePlots() {
    TCanvas * slide;
-   //TPad* p;
 
    char slideT[256], slideN[256], slideF[256];
 
    sprintf(slideN,"eff_vs_flux_%s",_testBoard.c_str());
    sprintf(slideT,"Efficiency vs flux %s",_testBoard.c_str());
    sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 800, 600);
+   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+   slide->SetRightMargin(0.10);
+   slide->SetBottomMargin(0.135);
    TLegend* leg = new TLegend(0.1,0.15,0.25,0.35);
    leg->SetFillColor(10);
    leg->SetBorderSize(0);
-
-   g_effFlux[0]->SetMaximum(1.02);
-   g_effFlux[0]->SetMinimum(0.5);
-   g_effFlux[0]->Draw("pe");
-   leg->AddEntry(g_effFlux[0],Form("WBC=%d",WBCvalue[0]),"p");
-   for(int iwbc=1; iwbc<nWBC; iwbc++) {
+   TH2F *hSpaceFlux = new TH2F("hSpaceFlux",slideT,50,0.,500., 100, 0.5, 1.02);
+   hSpaceFlux->SetYTitle("Efficiency");
+   hSpaceFlux->GetYaxis()->SetTitleOffset(0.8);
+   hSpaceFlux->SetXTitle("Flux");
+   hSpaceFlux->SetStats(0);
+   hSpaceFlux->Draw();
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      if(h_effFlux[iwbc][0]->GetEntries() == 0) continue;
       g_effFlux[iwbc]->Draw("pe same");
       leg->AddEntry(g_effFlux[iwbc],Form("WBC=%d",WBCvalue[iwbc]),"p");
    }
@@ -203,50 +206,62 @@ void tbAna::makePlots() {
    sprintf(slideN,"eff_vs_nhits_%s",_testBoard.c_str());
    sprintf(slideT,"Efficiency vs Occupancy %s",_testBoard.c_str());
    sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 800, 600);
-
-   g_effNHits[0]->SetMaximum(1.02);
-   g_effNHits[0]->SetMinimum(0.5);
-   g_effNHits[0]->Draw("pe");
-   for(int iwbc=1; iwbc<nWBC; iwbc++) {
+   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+   slide->SetRightMargin(0.10);
+   slide->SetBottomMargin(0.135);
+   TH2F *hSpaceNHits = new TH2F("hSpaceNHits",slideT,25,-0.5,24.5, 100, 0., 1.02);
+   hSpaceNHits->SetYTitle("Efficiency");
+   hSpaceNHits->GetYaxis()->SetTitleOffset(0.8);
+   hSpaceNHits->SetXTitle("NHits");
+   hSpaceNHits->SetStats(0);
+   hSpaceNHits->Draw();
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      if(h_effNHits[iwbc][0]->GetEntries() == 0) continue;
       g_effNHits[iwbc]->Draw("pe same");
    }
    leg->Draw();
    slide->SaveAs(slideF);
 
+   int nSpills = 1+_finalSpill-_firstSpill;
+
    sprintf(slideN,"eff_vs_spill_%s",_testBoard.c_str());
    sprintf(slideT,"Efficiency vs spill %s",_testBoard.c_str());
    sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 800, 600);
-
-   // g_effSpill[0]->SetMaximum(1.02);
-   // g_effSpill[0]->SetMinimum(0.5);
-   int nSpills = 1+_finalSpill-_firstSpill;
-   TH2F *spacer = new TH2F("spacer", "", nSpills, _firstSpill-0.5, _finalSpill+0.5, 22, 0.5, 1.02);
-   spacer->SetStats(0);
-   spacer->Draw();
+   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+   slide->SetRightMargin(0.10);
+   slide->SetBottomMargin(0.135);
+   TH2F *hSpaceSpill = new TH2F("hSpaceSpill", slideT, nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, 0.5, 1.02);
+   hSpaceSpill->SetYTitle("Efficiency");
+   hSpaceSpill->GetYaxis()->SetTitleOffset(0.8);
+   hSpaceSpill->GetXaxis()->SetNoExponent();
+   hSpaceSpill->SetXTitle("Spill");
+   hSpaceSpill->SetStats(0);
+   hSpaceSpill->Draw();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      if(h_effSpill[iwbc][0]->GetEntries() == 0) continue;
       g_effSpill[iwbc]->Draw("pe same");
    }
-   //leg->Draw();
+   leg->Draw();
    slide->SaveAs(slideF);
 
    for(int iD=0; iD<nD; iD++) {
       sprintf(slideN,"res%s_vs_spill_%s",D[iD],_testBoard.c_str());
       sprintf(slideT,"Mean %s residual vs spill %s",D[iD],_testBoard.c_str());
       sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-      slide = new TCanvas(slideN, slideT, 0, 0, 800, 600);
-
-      TH2F *spacer2 = new TH2F("spacer2", "", nSpills, _firstSpill-0.5, _finalSpill+0.5, 20, -0.01, 0.01);
-      spacer2->SetStats(0);
-      spacer2->Draw();
-      // h_resSpill[0][iD][0]->SetRange(1,nSpills);
-      // h_resSpill[0][iD][0]->Draw();
+      slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+      slide->SetRightMargin(0.10);
+      slide->SetBottomMargin(0.135);
+      TH2F *hSpaceRes = new TH2F("hSpaceRes", slideT, nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
+      hSpaceRes->GetXaxis()->SetNoExponent();
+      hSpaceRes->SetXTitle("Spill");
+      hSpaceRes->SetStats(0);
+      hSpaceRes->Draw();
       for(int iwbc=0; iwbc<nWBC; iwbc++) {
+         if(h_resSpill[iwbc][iD][0]->GetEntries() == 0) continue;
          h_resSpill[iwbc][iD][0]->Draw("same");
       }
-      //leg->Draw();
       slide->SaveAs(slideF);
+      delete hSpaceRes;
    }
 
 }
@@ -563,7 +578,7 @@ void tbAna::bookHistos() {
          sprintf(name, "h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs flux (WBC %d)",suffix, WBCvalue[iwbc]);
          //h_effFlux[iwbc][i] = new TH1F(name, title, nIntBins, intHist);
-         h_effFlux[iwbc][i] = new TH1F(name, title, 40, 0., 1000.);
+         h_effFlux[iwbc][i] = new TH1F(name, title, 100, 0., 1000.);
 
          sprintf(name, "h_effNHits_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs pixel hits (WBC %d)",suffix,WBCvalue[iwbc]);
@@ -575,11 +590,11 @@ void tbAna::bookHistos() {
 
          sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
-         h_effMap[iwbc][i] = new TH2F(name, title, 100, -8.,8.,160,-8.,8.);
+         h_effMap[iwbc][i] = new TH2F(name, title, 50, -5.,5.,50,-5.,5.);
          if(0==i) {
             sprintf(name, "h_effMap_wbc%d",WBCvalue[iwbc]);
             sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
-            h_effMap[iwbc][2] = new TH2F(name, title, 100, -8.,8.,160,-8.,8.);
+            h_effMap[iwbc][2] = new TH2F(name, title, 50, -5.,5.,50,-5.,5.);
          }
 
          if(0==i) sprintf(suffix, "mean");
