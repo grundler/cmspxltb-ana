@@ -2,3 +2,4 @@
 *.so
 *.root
 log.*
+plots
