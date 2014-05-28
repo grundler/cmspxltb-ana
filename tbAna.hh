@@ -74,6 +74,7 @@ private:
 
    //geometrical
    TH2F *h_effMap[nWBC][3]; //tracks/hits/efficiency maps
+   TH2F *h_effMapWide[nWBC][3];
 
    //Tree information
 
