@@ -38,6 +38,7 @@ private:
    int _wbc;
    int _nBuckets;
 
+   void createMapLong();
    int calcFlux();
 
    TChain *tree;

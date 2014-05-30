@@ -66,7 +66,6 @@ treeCorrelator::treeCorrelator(int spill, string board)
    tree_summary = new TChain("tree_summary");
    tree_summary->Add(QIEfilename.c_str());
    
-   double timebin = 1000./53.104;  //[us] <-- 18.83ns
    summary_Trigger_count = -1;
    summary_Trigger_RF_onset = 0;
    summary_Trigger_turn_onset = 0;
@@ -86,7 +85,6 @@ treeCorrelator::treeCorrelator(int spill, string board)
    tree_summary->SetBranchAddress("summary_Trigger_Nproton_minusWBC",&summary_Trigger_Nproton_minusWBC);
    tree_summary->SetBranchAddress("summary_Trigger_Nproton",&summary_Trigger_Nproton);
 
-
    tree = new TChain("tree");
    tree->Add(TBfilename.c_str());
 
@@ -96,6 +94,14 @@ treeCorrelator::treeCorrelator(int spill, string board)
    tree->SetBranchAddress("EventNumber",&EventNumber);
    tree->SetBranchAddress("TimeStamp",&TimeStamp);
    tree->SetBranchAddress("TriggerPhase",&TriggerPhase);
+
+   createMapLong();
+   _isInitialized = true;   
+}
+
+void treeCorrelator::createMapLong() {
+
+   double timebin = 1000./53.104;  //[us] <-- 18.83ns
 
    int previousTime = 0;
    int currentTime = 0;
@@ -173,7 +179,7 @@ treeCorrelator::treeCorrelator(int spill, string board)
    }
    printf("\n");
 
-   _isInitialized = true;
+   //_isInitialized = true;
     
    // for(map<int,int>::iterator _syncMapItr = _syncMap.begin(); _syncMapItr != _syncMap.end(); ++_syncMapItr)
    //    cout << _syncMapItr->first << " " << _syncMapItr->second << endl;
