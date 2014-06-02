@@ -220,16 +220,16 @@ int treeCorrelator::getTriggerPhase(int EvtNumr) {
    return -1;
 }
 
-int treeCorrelator::getFlux(int trigCount) {
-   map<int, int>::iterator it;
+float treeCorrelator::getFlux(int trigCount) {
+   map<int, float>::iterator it;
    it = _fluxMap.find(trigCount);
    if(it != _fluxMap.end())
       return it->second;
 
-   return -1;
+   return -1.;
 }
 
-int treeCorrelator::calcFlux() {
+float treeCorrelator::calcFlux() {
 
    float qb6 = 0.6755; //qie coverage of beam in x (6mm width)
    float qb5 = 0.7517; //qie coverage of beam in y (5mm width)

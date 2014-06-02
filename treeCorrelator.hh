@@ -27,7 +27,7 @@ public:
    
    int getQieEvent(int EvtNumr);
    int getTriggerPhase(int EvtNumr);
-   int getFlux(int trigCount);
+   float getFlux(int trigCount);
    int getWBC() { return _wbc; };
 
 private:
@@ -39,7 +39,7 @@ private:
    int _nBuckets;
 
    void createMapLong();
-   int calcFlux();
+   float calcFlux();
 
    TChain *tree;
    
@@ -67,7 +67,7 @@ private:
    map<int, int> _tpMap;
 
    //map qie event and intensity
-   map<int, int> _fluxMap;
+   map<int, float> _fluxMap;
    
 };
 
