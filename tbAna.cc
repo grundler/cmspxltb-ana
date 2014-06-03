@@ -1,5 +1,6 @@
 #include "tbAna.hh"
 #include "treeCorrelator.hh"
+#include "utils.hh"
 
 #include <cstring>
 #include <iostream>
@@ -10,8 +11,6 @@
 #include <TH2F.h>
 #include <TProfile.h>
 #include <TLegend.h>
-//#include <TLine.h>
-//#include <TF1.h>
 #include <TCanvas.h>
 #include <TEntryList.h>
 #include <TGraphAsymmErrors.h>
@@ -681,42 +680,24 @@ void tbAna::bookHistos() {
       }
 
       //set up graphs
-
-      sprintf(name, "g_effFlux_wbc%d", WBCvalue[iwbc]);
-      sprintf(title, "Efficiency vs flux (WBC %d)", WBCvalue[iwbc]);
+      utils* util = new utils();
       g_effFlux[iwbc] = new TGraphAsymmErrors();
-      g_effFlux[iwbc]->SetName(name);
-      g_effFlux[iwbc]->SetTitle(title);
-      g_effFlux[iwbc]->SetMarkerColor(WBCcolor[iwbc]);
-      g_effFlux[iwbc]->SetLineColor(WBCcolor[iwbc]);
-      g_effFlux[iwbc]->SetMarkerStyle(WBCstyle[iwbc]);
-      g_effFlux[iwbc]->SetLineStyle(WBCstyle[iwbc]);
-      g_effFlux[iwbc]->GetXaxis()->SetTitle("Flux");
-      g_effFlux[iwbc]->GetYaxis()->SetTitle("Efficiency");
+      util->graphSetting(g_effFlux[iwbc],TString::Format("g_effFlux_wbc%d", WBCvalue[iwbc]),
+                         TString::Format("Efficiency vs flux (WBC %d)", WBCvalue[iwbc]),
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Flux"),TString::Format("Efficiency"));
 
-      sprintf(name, "g_effNHits_wbc%d", WBCvalue[iwbc]);
-      sprintf(title, "Efficiency vs pixel hits (WBC %d)", WBCvalue[iwbc]);
       g_effNHits[iwbc] = new TGraphAsymmErrors();
-      g_effNHits[iwbc]->SetName(name);
-      g_effNHits[iwbc]->SetTitle(title);
-      g_effNHits[iwbc]->SetMarkerColor(WBCcolor[iwbc]);
-      g_effNHits[iwbc]->SetLineColor(WBCcolor[iwbc]);
-      g_effNHits[iwbc]->SetMarkerStyle(WBCstyle[iwbc]);
-      g_effNHits[iwbc]->SetLineStyle(WBCstyle[iwbc]);
-      g_effNHits[iwbc]->GetXaxis()->SetTitle("NHits");
-      g_effNHits[iwbc]->GetYaxis()->SetTitle("Efficiency");
+      util->graphSetting(g_effNHits[iwbc],TString::Format("g_effNHits_wbc%d", WBCvalue[iwbc]),
+                         TString::Format("Efficiency vs pixel hits (WBC %d)", WBCvalue[iwbc]),
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("NHits"),TString::Format("Efficiency"));
 
-      sprintf(name, "g_effSpill_wbc%d", WBCvalue[iwbc]);
-      sprintf(title, "Efficiency vs spill (WBC %d)", WBCvalue[iwbc]);
       g_effSpill[iwbc] = new TGraphAsymmErrors();
-      g_effSpill[iwbc]->SetName(name);
-      g_effSpill[iwbc]->SetTitle(title);
-      g_effSpill[iwbc]->SetMarkerColor(WBCcolor[iwbc]);
-      g_effSpill[iwbc]->SetLineColor(WBCcolor[iwbc]);
-      g_effSpill[iwbc]->SetMarkerStyle(WBCstyle[iwbc]);
-      g_effSpill[iwbc]->SetLineStyle(WBCstyle[iwbc]);
-      g_effSpill[iwbc]->GetXaxis()->SetTitle("Spill");
-      g_effSpill[iwbc]->GetYaxis()->SetTitle("Efficiency");
+      util->graphSetting(g_effSpill[iwbc],TString::Format("g_effSpill_wbc%d", WBCvalue[iwbc]),
+                         TString::Format("Efficiency vs spill (WBC %d)", WBCvalue[iwbc]),
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Spill"),TString::Format("Efficiency"));
 
       for(int i=0; i<3; i++) {//loop over 2D histograms (tracks,hits, efficiency)
          if(0==i)      sprintf(suffix, "tracks");
@@ -732,18 +713,6 @@ void tbAna::bookHistos() {
          sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
          h_effMapWide[iwbc][i] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
          h_effMapWide[iwbc][i]->Sumw2();
-
-         // if(0==i) {
-         //    sprintf(name, "h_effMap_wbc%d",WBCvalue[iwbc]);
-         //    sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
-         //    h_effMap[iwbc][2] = new TH2F(name, title,60,-4.5,4.5,90,-4.5,4.5);
-         //    h_effMap[iwbc][2]->Sumw2();
-
-         //    sprintf(name, "h_effMapWide_wbc%d",WBCvalue[iwbc]);
-         //    sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
-         //    h_effMapWide[iwbc][2] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
-         //    h_effMapWide[iwbc][2]->Sumw2();
-         // }
       }
 
    }//loop over WBC values
