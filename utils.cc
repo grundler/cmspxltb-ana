@@ -1,8 +1,11 @@
 #include "utils.hh"
 
+#include <iostream>
+
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TH1.h>
 #include <TH2.h>
 #include <TGraph.h>
 #include <TAxis.h>
@@ -25,7 +28,31 @@ void utils::graphSetting(TGraph* g, TString name, TString title,
 
 }
 
+void utils::graphSetting(TGraph* g, TH1F* h,
+                         int color, int style, 
+                         TString xTitle, TString yTitle) {
+
+   Color_t mColor = color>=0 ? color : 1; //black as default
+   Style_t mStyle = style>=0 ? style : 8; //scalable dot as default
+
+   g->SetMarkerColor(mColor);
+   g->SetLineColor(mColor);
+   g->SetMarkerStyle(mStyle);
+   g->SetLineStyle(mStyle);
+
+   h->GetXaxis()->SetTitle(xTitle);
+   h->GetYaxis()->SetTitle(yTitle);
+   h->GetYaxis()->SetTitleOffset(0.8);
+   h->SetStats(0);
+   h->SetMaximum(1.02);
+   h->SetMinimum(0.8);
+
+   g->SetHistogram(h);
+}
+
+
 void utils::spacerSetting(TH2* h, TGraph* g) {
+
    h->SetXTitle(g->GetXaxis()->GetTitle());
    h->SetYTitle(g->GetYaxis()->GetTitle());
 
@@ -36,7 +63,7 @@ void utils::spacerSetting(TH2* h, TGraph* g) {
 TCanvas* utils::newSlide(TString name, TString title) {
    TCanvas* slide = new TCanvas(name, title, 0, 0, 1000, 600);
 
-   slide->SetRightMargin(0.10);
+   slide->SetLeftMargin(0.10);
    slide->SetBottomMargin(0.135);
 
    slide->SetGrid();

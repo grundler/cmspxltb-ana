@@ -61,14 +61,15 @@ private:
 
    //Histograms and graphs
 
+   //tracks, hits per flux to do efficiency, third histogram is filler for graph
    //vs flux
-   TH1F *h_effFlux[nWBC][2]; //tracks, hits per flux to do efficiency
-   TH1F *h_effNHits[nWBC][2]; //tracks, hits vs number of pixel hits
+   TH1F *h_effFlux[nWBC][3]; 
+   TH1F *h_effNHits[nWBC][3]; 
    TGraphAsymmErrors *g_effFlux[nWBC];
    TGraphAsymmErrors *g_effNHits[nWBC];
 
    //vs spill
-   TH1F *h_effSpill[nWBC][2]; //tracks, hits per spill to do spill-by-spill efficiency
+   TH1F *h_effSpill[nWBC][3];
    TGraphAsymmErrors *g_effSpill[nWBC];
 
    TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 

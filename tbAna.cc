@@ -43,14 +43,24 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
 tbAna::~tbAna() {
    delete _trackTree;
 
-   for(int iwbc=0; iwbc<nWBC; iwbc++)
-      for(int i=0; i<2; i++) {
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      for(int i=0; i<3; i++) {
          delete h_effFlux[iwbc][i];
          delete h_effNHits[iwbc][i];
          delete h_effSpill[iwbc][i];
+
+         delete h_effMap[iwbc][i];
+         delete h_effMapWide[iwbc][i];
          
-         delete h_resSpill[iwbc][i];
+         if(i<2)
+            for(int j=0; j<nD; j++)
+               delete h_resSpill[iwbc][j][i];
       }
+      delete g_effFlux[iwbc];
+      delete g_effNHits[iwbc];
+      delete g_effSpill[iwbc];
+   }
+   
 }
 
 void tbAna::analyze(TCut myCut) {
@@ -152,10 +162,23 @@ void tbAna::analyze(TCut myCut) {
 
    TFile *f = new TFile(filename.c_str(),"recreate");
 
+   utils* util = new utils();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
-      g_effFlux[iwbc]->BayesDivide(h_effFlux[iwbc][1],h_effFlux[iwbc][0]);
-      g_effNHits[iwbc]->BayesDivide(h_effNHits[iwbc][1],h_effNHits[iwbc][0]);
-      g_effSpill[iwbc]->BayesDivide(h_effSpill[iwbc][1],h_effSpill[iwbc][0]);
+      g_effFlux[iwbc]->Divide(h_effFlux[iwbc][1],h_effFlux[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effFlux[iwbc],h_effFlux[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Flux"),TString::Format("Efficiency"));
+
+      g_effNHits[iwbc]->Divide(h_effNHits[iwbc][1],h_effNHits[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effNHits[iwbc],h_effNHits[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("NHits"),TString::Format("Efficiency"));
+
+      g_effSpill[iwbc]->Divide(h_effSpill[iwbc][1],h_effSpill[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effSpill[iwbc],h_effSpill[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Spill"),TString::Format("Efficiency"));
+
 
       h_effMap[iwbc][2]->Divide(h_effMap[iwbc][1],h_effMap[iwbc][0],1,1,"B");
       h_effMapWide[iwbc][2]->Divide(h_effMapWide[iwbc][1],h_effMapWide[iwbc][0],1,1,"B");
@@ -164,100 +187,66 @@ void tbAna::analyze(TCut myCut) {
       g_effNHits[iwbc]->Write();
       g_effSpill[iwbc]->Write();
 
-      for(int i=0; i<2; i++) {
+      for(int i=0; i<3; i++) {
          h_effFlux[iwbc][i]->Write();
          h_effNHits[iwbc][i]->Write();
          h_effSpill[iwbc][i]->Write();
          h_effMap[iwbc][i]->Write();
          h_effMapWide[iwbc][i]->Write();
-         if(1==i)
-            h_effMap[iwbc][2]->Write();
-            h_effMapWide[iwbc][2]->Write();
-         for(int iD=0; iD<nD; iD++) {
-            h_resSpill[iwbc][iD][i]->Write();
-         }
+         if(i<2)
+            for(int iD=0; iD<nD; iD++) {
+               h_resSpill[iwbc][iD][i]->Write();
+            }
       }
    }
    f->Close();
 }
 
 void tbAna::makePlots() {
+   utils* util = new utils();
+
    TCanvas * slide;
 
    char slideT[256], slideN[256], slideF[256];
 
-   sprintf(slideN,"eff_vs_flux_%s",_testBoard.c_str());
-   sprintf(slideT,"Efficiency vs flux %s",_testBoard.c_str());
-   sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-   slide->SetRightMargin(0.10);
-   slide->SetBottomMargin(0.135);
+   slide = util->newSlide(TString::Format("eff_vs_flux_%s",_testBoard.c_str()),"");
    TLegend* leg = new TLegend(0.1,0.15,0.25,0.35);
-   leg->SetFillColor(10);
-   leg->SetBorderSize(0);
-   TH2F *hSpaceFlux = new TH2F("hSpaceFlux",slideT,50,0.,500., 100, 0.5, 1.02);
-   hSpaceFlux->SetYTitle("Efficiency");
-   hSpaceFlux->GetYaxis()->SetTitleOffset(0.8);
-   hSpaceFlux->SetXTitle("Flux");
-   hSpaceFlux->SetStats(0);
-   hSpaceFlux->Draw();
+   util->legendSetting(leg);
+   h_effFlux[0][2]->GetXaxis()->SetRangeUser(0.,500.);
+   h_effFlux[0][2]->Draw();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
       if(h_effFlux[iwbc][0]->GetEntries() == 0) continue;
       g_effFlux[iwbc]->Draw("pe same");
       leg->AddEntry(g_effFlux[iwbc],Form("WBC=%d",WBCvalue[iwbc]),"p");
    }
    leg->Draw();
-   slide->SaveAs(slideF);
+   slide->SaveAs(Form("%s/eff_vs_flux_%s.%s",plotDir,_testBoard.c_str(),plotExt));
 
-   sprintf(slideN,"eff_vs_nhits_%s",_testBoard.c_str());
-   sprintf(slideT,"Efficiency vs Occupancy %s",_testBoard.c_str());
-   sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-   slide->SetRightMargin(0.10);
-   slide->SetBottomMargin(0.135);
-   TH2F *hSpaceNHits = new TH2F("hSpaceNHits",slideT,25,-0.5,24.5, 100, 0., 1.02);
-   hSpaceNHits->SetYTitle("Efficiency");
-   hSpaceNHits->GetYaxis()->SetTitleOffset(0.8);
-   hSpaceNHits->SetXTitle("NHits");
-   hSpaceNHits->SetStats(0);
-   hSpaceNHits->Draw();
+   slide = util->newSlide(TString::Format("eff_vs_nhits_%s",_testBoard.c_str()),"");
+   h_effNHits[0][2]->GetXaxis()->SetRange(1,25);
+   h_effNHits[0][2]->Draw();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
       if(h_effNHits[iwbc][0]->GetEntries() == 0) continue;
       g_effNHits[iwbc]->Draw("pe same");
    }
    leg->Draw();
-   slide->SaveAs(slideF);
+   slide->SaveAs(Form("%s/eff_vs_nhits_%s.%s",plotDir,_testBoard.c_str(),plotExt));
 
    int nSpills = 1+_finalSpill-_firstSpill;
 
-   sprintf(slideN,"eff_vs_spill_%s",_testBoard.c_str());
-   sprintf(slideT,"Efficiency vs spill %s",_testBoard.c_str());
-   sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-   slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-   slide->SetRightMargin(0.10);
-   slide->SetBottomMargin(0.135);
-   TH2F *hSpaceSpill = new TH2F("hSpaceSpill", slideT, nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, 0.5, 1.02);
-   hSpaceSpill->SetYTitle("Efficiency");
-   hSpaceSpill->GetYaxis()->SetTitleOffset(0.8);
-   hSpaceSpill->GetXaxis()->SetNoExponent();
-   hSpaceSpill->SetXTitle("Spill");
-   hSpaceSpill->SetStats(0);
-   hSpaceSpill->Draw();
+   slide = util->newSlide(TString::Format("eff_vs_spill_%s",_testBoard.c_str()),"");
+   h_effSpill[0][2]->GetXaxis()->SetNoExponent();
+   h_effSpill[0][2]->Draw();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
       if(h_effSpill[iwbc][0]->GetEntries() == 0) continue;
       g_effSpill[iwbc]->Draw("pe same");
    }
    leg->Draw();
-   slide->SaveAs(slideF);
+   slide->SaveAs(Form("%s/eff_vs_spill_%s.%s",plotDir,_testBoard.c_str(),plotExt));
 
    for(int iD=0; iD<nD; iD++) {
-      sprintf(slideN,"res%s_vs_spill_%s",D[iD],_testBoard.c_str());
-      sprintf(slideT,"Mean %s residual vs spill %s",D[iD],_testBoard.c_str());
-      sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-      slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-      slide->SetRightMargin(0.10);
-      slide->SetBottomMargin(0.135);
-      TH2F *hSpaceRes = new TH2F("hSpaceRes", slideT, nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
+      slide = util->newSlide(TString::Format("res%s_vs_spill_%s",D[iD],_testBoard.c_str()),"");
+      TH2F *hSpaceRes = new TH2F("hSpaceRes", Form("Mean %s residual vs spill %s",D[iD],_testBoard.c_str()), nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
       hSpaceRes->GetXaxis()->SetNoExponent();
       hSpaceRes->SetXTitle("Spill");
       hSpaceRes->SetStats(0);
@@ -266,7 +255,7 @@ void tbAna::makePlots() {
          if(h_resSpill[iwbc][iD][0]->GetEntries() == 0) continue;
          h_resSpill[iwbc][iD][0]->Draw("same");
       }
-      slide->SaveAs(slideF);
+      slide->SaveAs(Form("%s/res%s_vs_spill_%s.%s",plotDir,D[iD],_testBoard.c_str(),plotExt));
       delete hSpaceRes;
    }
 
@@ -279,34 +268,33 @@ void tbAna::makePlots() {
       slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
       slide->SetRightMargin(0.10);
       slide->SetBottomMargin(0.135);
-      //TH2F *hSpace = new TH2F("hSpace", slideT, nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, 0.5, 1.02);
       h_effMap[iwbc][2]->SetStats(0);
       h_effMap[iwbc][2]->SetMinimum(0.7);
       h_effMap[iwbc][2]->SetMaximum(1.);
       h_effMap[iwbc][2]->Draw("colz");
       slide->SaveAs(slideF);
 
-      TProfile* effMapProfX = h_effMap[iwbc][2]->ProfileX();
-      sprintf(slideN,"effMap_profX_%s_WBC%d",_testBoard.c_str(),WBCvalue[iwbc]);
-      sprintf(slideT,"Efficiency Map X Profile (WBC=%d) %s",WBCvalue[iwbc],_testBoard.c_str());
-      sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-      slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-      slide->SetRightMargin(0.10);
-      slide->SetBottomMargin(0.135);
-      effMapProfX->SetStats(0);
-      effMapProfX->Draw("e");
-      slide->SaveAs(slideF);
+      // TProfile* effMapProfX = h_effMap[iwbc][2]->ProfileX();
+      // sprintf(slideN,"effMap_profX_%s_WBC%d",_testBoard.c_str(),WBCvalue[iwbc]);
+      // sprintf(slideT,"Efficiency Map X Profile (WBC=%d) %s",WBCvalue[iwbc],_testBoard.c_str());
+      // sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
+      // slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+      // slide->SetRightMargin(0.10);
+      // slide->SetBottomMargin(0.135);
+      // effMapProfX->SetStats(0);
+      // effMapProfX->Draw("e");
+      // slide->SaveAs(slideF);
 
-      TProfile* effMapProfY = h_effMap[iwbc][2]->ProfileY();
-      sprintf(slideN,"effMap_profY_%s_WBC%d",_testBoard.c_str(),WBCvalue[iwbc]);
-      sprintf(slideT,"Efficiency Map Y Profile (WBC=%d) %s",WBCvalue[iwbc],_testBoard.c_str());
-      sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
-      slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
-      slide->SetRightMargin(0.10);
-      slide->SetBottomMargin(0.135);
-      effMapProfY->SetStats(0);
-      effMapProfY->Draw("e");
-      slide->SaveAs(slideF);      
+      // TProfile* effMapProfY = h_effMap[iwbc][2]->ProfileY();
+      // sprintf(slideN,"effMap_profY_%s_WBC%d",_testBoard.c_str(),WBCvalue[iwbc]);
+      // sprintf(slideT,"Efficiency Map Y Profile (WBC=%d) %s",WBCvalue[iwbc],_testBoard.c_str());
+      // sprintf(slideF,"%s/%s.%s",plotDir,slideN,plotExt);
+      // slide = new TCanvas(slideN, slideT, 0, 0, 1000, 600);
+      // slide->SetRightMargin(0.10);
+      // slide->SetBottomMargin(0.135);
+      // effMapProfY->SetStats(0);
+      // effMapProfY->Draw("e");
+      // slide->SaveAs(slideF);      
 
       sprintf(slideN,"effTrack_map_%s_WBC%d",_testBoard.c_str(),WBCvalue[iwbc]);
       sprintf(slideT,"Track Map (WBC=%d) %s",WBCvalue[iwbc],_testBoard.c_str());
@@ -550,7 +538,7 @@ bool tbAna::setTriggerPhaseCut() {
    TGraphAsymmErrors *tgaeTP = new TGraphAsymmErrors();
    tgaeTP->SetName("tgaeTP");
    tgaeTP->SetTitle("Efficiency vs TriggerPhase");
-   tgaeTP->BayesDivide(hitsTP,tracksTP);
+   tgaeTP->Divide(hitsTP,tracksTP,"cl=0.683 b(1,1) mode");
 
    int tpMax=-1;
    float effMax=0.;
@@ -649,60 +637,26 @@ void tbAna::bookHistos() {
 
    char suffix[16];
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
-      for(int i=0; i<2; i++) { //loop over histograms (usually tracks and hits, for efficiency)
-         if(0==i) sprintf(suffix, "tracks");
-         else     sprintf(suffix, "hits");
+      for(int i=0; i<3; i++) { //loop over histograms (usually tracks and hits, for efficiency)
+         if(0==i)      sprintf(suffix, "tracks");
+         else if(1==i) sprintf(suffix, "hits");
+         else          sprintf(suffix, "efficiency");
 
          sprintf(name, "h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix);
-         sprintf(title, "%s vs flux (WBC %d)",suffix, WBCvalue[iwbc]);
+         sprintf(title, "%s vs flux",suffix);
          //h_effFlux[iwbc][i] = new TH1F(name, title, nIntBins, intHist);
-         h_effFlux[iwbc][i] = new TH1F(name, title, 100, 0., 1000.);
+         h_effFlux[iwbc][i] = new TH1F(name, title, 200, 0., 1000.);
          h_effFlux[iwbc][i]->Sumw2();
 
          sprintf(name, "h_effNHits_wbc%d_%s",WBCvalue[iwbc],suffix);
-         sprintf(title, "%s vs pixel hits (WBC %d)",suffix,WBCvalue[iwbc]);
+         sprintf(title, "%s vs pixel hits",suffix);
          h_effNHits[iwbc][i] = new TH1F(name, title, 100, -0.5, 99.5);
          h_effNHits[iwbc][i]->Sumw2();
 
          sprintf(name, "h_effSpill_wbc%d_%s",WBCvalue[iwbc],suffix);
-         sprintf(title, "%s vs spill (WBC %d)",suffix,WBCvalue[iwbc]);
+         sprintf(title, "%s vs spill",suffix);
          h_effSpill[iwbc][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
          h_effSpill[iwbc][i]->Sumw2();
-
-         if(0==i) sprintf(suffix, "mean");
-         else     sprintf(suffix, "sigma");
-
-         for(int iD=0; iD<nD; iD++) {
-            sprintf(name, "h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix);
-            sprintf(title, "%s residual %s vs spill (WBC %d)",D[iD],suffix,WBCvalue[iwbc]);
-            h_resSpill[iwbc][iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
-         }
-      }
-
-      //set up graphs
-      utils* util = new utils();
-      g_effFlux[iwbc] = new TGraphAsymmErrors();
-      util->graphSetting(g_effFlux[iwbc],TString::Format("g_effFlux_wbc%d", WBCvalue[iwbc]),
-                         TString::Format("Efficiency vs flux (WBC %d)", WBCvalue[iwbc]),
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("Flux"),TString::Format("Efficiency"));
-
-      g_effNHits[iwbc] = new TGraphAsymmErrors();
-      util->graphSetting(g_effNHits[iwbc],TString::Format("g_effNHits_wbc%d", WBCvalue[iwbc]),
-                         TString::Format("Efficiency vs pixel hits (WBC %d)", WBCvalue[iwbc]),
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("NHits"),TString::Format("Efficiency"));
-
-      g_effSpill[iwbc] = new TGraphAsymmErrors();
-      util->graphSetting(g_effSpill[iwbc],TString::Format("g_effSpill_wbc%d", WBCvalue[iwbc]),
-                         TString::Format("Efficiency vs spill (WBC %d)", WBCvalue[iwbc]),
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("Spill"),TString::Format("Efficiency"));
-
-      for(int i=0; i<3; i++) {//loop over 2D histograms (tracks,hits, efficiency)
-         if(0==i)      sprintf(suffix, "tracks");
-         else if(1==i) sprintf(suffix, "hits");
-         else          sprintf(suffix, "efficiency");
 
          sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
@@ -713,6 +667,23 @@ void tbAna::bookHistos() {
          sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
          h_effMapWide[iwbc][i] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
          h_effMapWide[iwbc][i]->Sumw2();
+
+      }
+
+      //set up graphs
+      g_effFlux[iwbc] = new TGraphAsymmErrors();
+      g_effNHits[iwbc] = new TGraphAsymmErrors();
+      g_effSpill[iwbc] = new TGraphAsymmErrors();
+
+      for(int i=0; i<2; i++) {//loop over residual histograms
+         if(0==i) sprintf(suffix, "mean");
+         else     sprintf(suffix, "sigma");
+
+         for(int iD=0; iD<nD; iD++) {
+            sprintf(name, "h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix);
+            sprintf(title, "%s residual %s vs spill (WBC %d)",D[iD],suffix,WBCvalue[iwbc]);
+            h_resSpill[iwbc][iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+         }
       }
 
    }//loop over WBC values
