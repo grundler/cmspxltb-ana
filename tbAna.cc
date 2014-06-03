@@ -670,28 +670,6 @@ void tbAna::bookHistos() {
          h_effSpill[iwbc][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
          h_effSpill[iwbc][i]->Sumw2();
 
-         sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
-         sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
-         h_effMap[iwbc][i] = new TH2F(name, title,60,-4.5,4.5,90,-4.5,4.5);
-         h_effMap[iwbc][i]->Sumw2();
-
-         sprintf(name, "h_effMapWide_wbc%d_%s",WBCvalue[iwbc],suffix);
-         sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
-         h_effMapWide[iwbc][i] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
-         h_effMapWide[iwbc][i]->Sumw2();
-
-         if(0==i) {
-            sprintf(name, "h_effMap_wbc%d",WBCvalue[iwbc]);
-            sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
-            h_effMap[iwbc][2] = new TH2F(name, title,60,-4.5,4.5,90,-4.5,4.5);
-            h_effMap[iwbc][2]->Sumw2();
-
-            sprintf(name, "h_effMapWide_wbc%d",WBCvalue[iwbc]);
-            sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
-            h_effMapWide[iwbc][2] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
-            h_effMapWide[iwbc][2]->Sumw2();
-         }
-
          if(0==i) sprintf(suffix, "mean");
          else     sprintf(suffix, "sigma");
 
@@ -701,6 +679,8 @@ void tbAna::bookHistos() {
             h_resSpill[iwbc][iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
          }
       }
+
+      //set up graphs
 
       sprintf(name, "g_effFlux_wbc%d", WBCvalue[iwbc]);
       sprintf(title, "Efficiency vs flux (WBC %d)", WBCvalue[iwbc]);
@@ -737,6 +717,35 @@ void tbAna::bookHistos() {
       g_effSpill[iwbc]->SetLineStyle(WBCstyle[iwbc]);
       g_effSpill[iwbc]->GetXaxis()->SetTitle("Spill");
       g_effSpill[iwbc]->GetYaxis()->SetTitle("Efficiency");
-   }
+
+      for(int i=0; i<3; i++) {//loop over 2D histograms (tracks,hits, efficiency)
+         if(0==i)      sprintf(suffix, "tracks");
+         else if(1==i) sprintf(suffix, "hits");
+         else          sprintf(suffix, "efficiency");
+
+         sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_effMap[iwbc][i] = new TH2F(name, title,60,-4.5,4.5,90,-4.5,4.5);
+         h_effMap[iwbc][i]->Sumw2();
+
+         sprintf(name, "h_effMapWide_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s map (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_effMapWide[iwbc][i] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
+         h_effMapWide[iwbc][i]->Sumw2();
+
+         // if(0==i) {
+         //    sprintf(name, "h_effMap_wbc%d",WBCvalue[iwbc]);
+         //    sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
+         //    h_effMap[iwbc][2] = new TH2F(name, title,60,-4.5,4.5,90,-4.5,4.5);
+         //    h_effMap[iwbc][2]->Sumw2();
+
+         //    sprintf(name, "h_effMapWide_wbc%d",WBCvalue[iwbc]);
+         //    sprintf(title, "Efficiency map (WBC %d)",WBCvalue[iwbc]);
+         //    h_effMapWide[iwbc][2] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
+         //    h_effMapWide[iwbc][2]->Sumw2();
+         // }
+      }
+
+   }//loop over WBC values
 
 }
