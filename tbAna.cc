@@ -18,11 +18,12 @@
 
 using namespace std;
 
-tbAna::tbAna(int dutID, string board, int spill0, int spill1) 
+tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo) 
    : _testBoard(board),
      _DUTID(dutID),
      _firstSpill(spill0),
-     _finalSpill(spill1)
+     _finalSpill(spill1),
+     _algo(algo)
 {
    //Set TCuts
    chi2_50 = "Chi2<50.";
@@ -398,7 +399,7 @@ bool tbAna::initSpill(int spill) {
       return false;
 
    //Get maps to correlate with triggerphase and qie trees
-   _tc = new treeCorrelator(spill,_testBoard);
+   _tc = new treeCorrelator(spill,_testBoard, _algo);
    if(!_tc->isInitialized())
       return false;
 

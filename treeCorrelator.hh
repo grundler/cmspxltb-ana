@@ -20,7 +20,7 @@ class TChain;
 
 class treeCorrelator{
 public:
-   treeCorrelator(int spill, string board);
+   treeCorrelator(int spill, string board, int algo=0);
    ~treeCorrelator();
 
    bool isInitialized() { return _isInitialized; };
@@ -33,18 +33,22 @@ public:
 private:
    const int    _spill;
    const string _board;
+   const int    _algo;
    bool _isInitialized;
 
    int _wbc;
    int _nBuckets;
 
    void createMapLong();
+   void createMapQuick();
+
    float calcFlux();
 
    TChain *tree;
    
    int EventNumber;
    int TimeStamp;
+   int dtime;
    int TriggerPhase;
 
    TChain *tree_summary;
