@@ -153,8 +153,8 @@ void treeCorrelator::createMapLong() {
    int previousDiff = -999;
    for(int itimestamp=0;itimestamp<tree->GetEntries();itimestamp++) {
       tree->GetEntry(itimestamp);
-      if(itimestamp%1000==0) 
-         printf("\t\ttreeCorrelator on %1.3f %% (%i th : %i)\r",100.*itimestamp/tree->GetEntries(), itimestamp, TimeStamp);
+      // if(itimestamp%1000==0) 
+      //    printf("\t\ttreeCorrelator on %1.3f %% (%i th : %i)\r",100.*itimestamp/tree->GetEntries(), itimestamp, TimeStamp);
       if(TimeStampOffset!=-1&&(TimeStamp - TimeStampOffset)>=0) {
           
          if(TimeStamp - TimeStampOffset==0){
@@ -190,10 +190,9 @@ void treeCorrelator::createMapLong() {
          }
       }
    }
-   printf("\n");
+   // cout << endl;
 
-   //_isInitialized = true;
-    
+   // cout << "Synchronization map\n";
    // for(map<int,int>::iterator _syncMapItr = _syncMap.begin(); _syncMapItr != _syncMap.end(); ++_syncMapItr)
    //    cout << _syncMapItr->first << " " << _syncMapItr->second << endl;
    // for(map<int,float>::iterator _fluxMapItr = _fluxMap.begin(); _fluxMapItr != _fluxMap.end(); ++_fluxMapItr)
@@ -214,14 +213,14 @@ void treeCorrelator::createMapQuick() {
    tree->GetEntry(initEvent);
    int time_ref = TimeStamp;
    int evt_t0 = 0;
-   cout << "Reference event: " << EventNumber << ", time: " << time_ref << endl;
+   //cout << "Reference event: " << EventNumber << ", time: " << time_ref << endl;
    for(int iEvt=0; iEvt<initEvent; iEvt++) {
       tree->GetEntry(iEvt);
-      cout << " iEvt " << iEvt << ", event " << EventNumber << ", time " << TimeStamp << endl;
+      //cout << " iEvt " << iEvt << ", event " << EventNumber << ", time " << TimeStamp << endl;
       if((time_ref-TimeStamp)>spillGap)
          evt_t0 = EventNumber;
    }
-   cout << " Real first event of spill is " << evt_t0 << endl;
+   // cout << " Real first event of spill is " << evt_t0 << endl;
    
    //get list of events where gap appears
    vector<int> tb_evtnr;
@@ -231,7 +230,7 @@ void treeCorrelator::createMapQuick() {
 
       if(dtime>evtGap) {
          tb_evtnr.push_back(EventNumber);
-         cout << " dtime > " << evtGap << ", EvtNr " << EventNumber << ", dtime " << dtime << endl;
+         // cout << " dtime > " << evtGap << ", EvtNr " << EventNumber << ", dtime " << dtime << endl;
       }
    }
 
@@ -245,34 +244,35 @@ void treeCorrelator::createMapQuick() {
       int dturn = summary_Trigger_turn_onset-turn_p;
       if(dturn>turnGap || summary_Trigger_turn_onset==1) {
          qie_evtnr.push_back(summary_Trigger_count);
-         cout << " QIE trig " << summary_Trigger_count << ", turn " << summary_Trigger_turn_onset << ", dturn " << dturn << endl;
+         // cout << " QIE trig " << summary_Trigger_count << ", turn " << summary_Trigger_turn_onset << ", dturn " << dturn << endl;
       }
       turn_p = summary_Trigger_turn_onset;
    }
 
    //correlate lists
    int notFound = 9999;
-   int previousDiff = notFound;
+   int previousDiff = -notFound;
    for(unsigned i=0; i<tb_evtnr.size(); i++) {
       int mindiff = notFound;
       for(unsigned j=0; j<qie_evtnr.size(); j++) {
-         int diff = qie_evtnr[j] - tb_evtnr[i];
+         int diff = tb_evtnr[i] - qie_evtnr[j];
          if(abs(diff) < abs(mindiff)) mindiff = diff;
       }
-      cout << "  Event " << tb_evtnr[i] << ", diff " << mindiff << endl;
-      if(mindiff!=notFound && mindiff!=previousDiff) {
+      // cout << "  Event " << tb_evtnr[i] << ", diff " << mindiff << endl;
+      if(mindiff!=previousDiff) {
+         if(mindiff == notFound) {
+            mindiff = previousDiff + 1;
+         }
          _syncMap.insert( std::pair<int, int>(tb_evtnr[i], mindiff) );
          previousDiff = mindiff;
       }
    }
 
-   cout << endl;
+   // cout << endl;
 
-   //_isInitialized = true;
-    
-   cout << "Synchronization map\n";
-   for(map<int,int>::iterator _syncMapItr = _syncMap.begin(); _syncMapItr != _syncMap.end(); ++_syncMapItr)
-      cout << _syncMapItr->first << " " << _syncMapItr->second << endl;
+   // cout << "Synchronization map\n";
+   // for(map<int,int>::iterator _syncMapItr = _syncMap.begin(); _syncMapItr != _syncMap.end(); ++_syncMapItr)
+   //    cout << _syncMapItr->first << " " << _syncMapItr->second << endl;
 
 }
 
@@ -297,7 +297,7 @@ int treeCorrelator::getQieEvent(int EvtNumr) {
       _syncMapItr++;
    }
 
-   cout << " Event " << EvtNumr << " corresponds to QIE trigger " << TrigCount << endl;
+   // cout << " Event " << EvtNumr << " corresponds to QIE trigger " << TrigCount << endl;
    
    return TrigCount;
 }
