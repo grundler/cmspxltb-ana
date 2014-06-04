@@ -7,7 +7,6 @@
 class treeCorrelator;
 class TH1F;
 class TH2F;
-class TGraphAsymmErrors;
 
 using std::string;
 using std::vector;
@@ -67,12 +66,9 @@ private:
    //vs flux
    TH1F *h_effFlux[nWBC][3]; 
    TH1F *h_effNHits[nWBC][3]; 
-   TGraphAsymmErrors *g_effFlux[nWBC];
-   TGraphAsymmErrors *g_effNHits[nWBC];
 
    //vs spill
    TH1F *h_effSpill[nWBC][3];
-   TGraphAsymmErrors *g_effSpill[nWBC];
 
    TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
 

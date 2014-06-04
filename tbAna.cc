@@ -56,9 +56,6 @@ tbAna::~tbAna() {
             for(int j=0; j<nD; j++)
                delete h_resSpill[iwbc][j][i];
       }
-      delete g_effFlux[iwbc];
-      delete g_effNHits[iwbc];
-      delete g_effSpill[iwbc];
    }
    
 }
@@ -162,14 +159,9 @@ void tbAna::analyze(TCut myCut) {
 
    TFile *f = new TFile(filename.c_str(),"recreate");
 
-   utils* util = new utils();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
       h_effMap[iwbc][2]->Divide(h_effMap[iwbc][1],h_effMap[iwbc][0],1,1,"B");
       h_effMapWide[iwbc][2]->Divide(h_effMapWide[iwbc][1],h_effMapWide[iwbc][0],1,1,"B");
-
-      // g_effFlux[iwbc]->Write();
-      // g_effNHits[iwbc]->Write();
-      // g_effSpill[iwbc]->Write();
 
       for(int i=0; i<3; i++) {
          h_effFlux[iwbc][i]->Write();
@@ -193,17 +185,23 @@ void tbAna::makePlots() {
 
    char slideT[256], slideN[256], slideF[256];
 
+   TGraphAsymmErrors *g_effFlux[nWBC];
+   TGraphAsymmErrors *g_effNHits[nWBC];
+   TGraphAsymmErrors *g_effSpill[nWBC];
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      g_effFlux[iwbc] = new TGraphAsymmErrors();
       g_effFlux[iwbc]->Divide(h_effFlux[iwbc][1],h_effFlux[iwbc][0],"cl=0.683 b(1,1) mode");
       util->graphSetting(g_effFlux[iwbc],h_effFlux[iwbc][2],
                          WBCcolor[iwbc],WBCstyle[iwbc],
                          TString::Format("Flux"),TString::Format("Efficiency"));
-      
+
+      g_effNHits[iwbc] = new TGraphAsymmErrors();
       g_effNHits[iwbc]->Divide(h_effNHits[iwbc][1],h_effNHits[iwbc][0],"cl=0.683 b(1,1) mode");
       util->graphSetting(g_effNHits[iwbc],h_effNHits[iwbc][2],
                          WBCcolor[iwbc],WBCstyle[iwbc],
                          TString::Format("NHits"),TString::Format("Efficiency"));
       
+      g_effSpill[iwbc] = new TGraphAsymmErrors();
       g_effSpill[iwbc]->Divide(h_effSpill[iwbc][1],h_effSpill[iwbc][0],"cl=0.683 b(1,1) mode");
       util->graphSetting(g_effSpill[iwbc],h_effSpill[iwbc][2],
                          WBCcolor[iwbc],WBCstyle[iwbc],
@@ -667,11 +665,6 @@ void tbAna::bookHistos() {
 
       }
 
-      //set up graphs
-      g_effFlux[iwbc] = new TGraphAsymmErrors();
-      g_effNHits[iwbc] = new TGraphAsymmErrors();
-      g_effSpill[iwbc] = new TGraphAsymmErrors();
-
       for(int i=0; i<2; i++) {//loop over residual histograms
          if(0==i) sprintf(suffix, "mean");
          else     sprintf(suffix, "sigma");
@@ -711,11 +704,6 @@ void tbAna::loadHistogramsFromFile(char* fname) {
          h_effMap[iwbc][i] = (TH2F*) f->Get(Form("h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix));
          h_effMapWide[iwbc][i] = (TH2F*) f->Get(Form("h_effMapWide_wbc%d_%s",WBCvalue[iwbc],suffix));
       }
-
-      //set up graphs
-      g_effFlux[iwbc] = new TGraphAsymmErrors();
-      g_effNHits[iwbc] = new TGraphAsymmErrors();
-      g_effSpill[iwbc] = new TGraphAsymmErrors();
 
       for(int i=0; i<2; i++) {//loop over residual histograms
          if(0==i) sprintf(suffix, "mean");
