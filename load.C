@@ -14,7 +14,10 @@
    //create instance
    tbAna *ta = new tbAna(dutid,board,firstspill,finalspill,mapalgo);
 
-   //run analysis and make plots
-   ta->analyze();
+   //load file and make plots
+   ostringstream stream;
+   stream << "output_" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill << ".root";
+   string filename = stream.str();
+   ta->loadHistogramsFromFile(filename.c_str());
    ta->makePlots();
 }
