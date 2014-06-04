@@ -164,28 +164,12 @@ void tbAna::analyze(TCut myCut) {
 
    utils* util = new utils();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
-      g_effFlux[iwbc]->Divide(h_effFlux[iwbc][1],h_effFlux[iwbc][0],"cl=0.683 b(1,1) mode");
-      util->graphSetting(g_effFlux[iwbc],h_effFlux[iwbc][2],
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("Flux"),TString::Format("Efficiency"));
-
-      g_effNHits[iwbc]->Divide(h_effNHits[iwbc][1],h_effNHits[iwbc][0],"cl=0.683 b(1,1) mode");
-      util->graphSetting(g_effNHits[iwbc],h_effNHits[iwbc][2],
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("NHits"),TString::Format("Efficiency"));
-
-      g_effSpill[iwbc]->Divide(h_effSpill[iwbc][1],h_effSpill[iwbc][0],"cl=0.683 b(1,1) mode");
-      util->graphSetting(g_effSpill[iwbc],h_effSpill[iwbc][2],
-                         WBCcolor[iwbc],WBCstyle[iwbc],
-                         TString::Format("Spill"),TString::Format("Efficiency"));
-
-
       h_effMap[iwbc][2]->Divide(h_effMap[iwbc][1],h_effMap[iwbc][0],1,1,"B");
       h_effMapWide[iwbc][2]->Divide(h_effMapWide[iwbc][1],h_effMapWide[iwbc][0],1,1,"B");
 
-      g_effFlux[iwbc]->Write();
-      g_effNHits[iwbc]->Write();
-      g_effSpill[iwbc]->Write();
+      // g_effFlux[iwbc]->Write();
+      // g_effNHits[iwbc]->Write();
+      // g_effSpill[iwbc]->Write();
 
       for(int i=0; i<3; i++) {
          h_effFlux[iwbc][i]->Write();
@@ -208,6 +192,23 @@ void tbAna::makePlots() {
    TCanvas * slide;
 
    char slideT[256], slideN[256], slideF[256];
+
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      g_effFlux[iwbc]->Divide(h_effFlux[iwbc][1],h_effFlux[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effFlux[iwbc],h_effFlux[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Flux"),TString::Format("Efficiency"));
+      
+      g_effNHits[iwbc]->Divide(h_effNHits[iwbc][1],h_effNHits[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effNHits[iwbc],h_effNHits[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("NHits"),TString::Format("Efficiency"));
+      
+      g_effSpill[iwbc]->Divide(h_effSpill[iwbc][1],h_effSpill[iwbc][0],"cl=0.683 b(1,1) mode");
+      util->graphSetting(g_effSpill[iwbc],h_effSpill[iwbc][2],
+                         WBCcolor[iwbc],WBCstyle[iwbc],
+                         TString::Format("Spill"),TString::Format("Efficiency"));
+   }
 
    slide = util->newSlide(TString::Format("eff_vs_flux_%s",_testBoard.c_str()),"");
    TLegend* leg = new TLegend(0.1,0.15,0.25,0.35);
