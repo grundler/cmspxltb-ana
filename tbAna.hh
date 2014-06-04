@@ -28,6 +28,8 @@ public:
 
    bool initSpill(int spill);
 
+   void loadHistogramsFromFile(char* fname);
+
 private:
 
    bool setSlopeCut();

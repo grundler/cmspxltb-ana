@@ -630,9 +630,6 @@ void tbAna::bookHistos() {
 
    char title[128], name[256];
 
-   // const int nIntBins = 11;
-   // const float intHist[nIntBins+1] = {0,25,50,100,200,400,800,1600,3200,6400,12800,20000};
-
    int nSpills = 1+_finalSpill-_firstSpill;
 
    char suffix[16];
@@ -644,7 +641,6 @@ void tbAna::bookHistos() {
 
          sprintf(name, "h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs flux",suffix);
-         //h_effFlux[iwbc][i] = new TH1F(name, title, nIntBins, intHist);
          h_effFlux[iwbc][i] = new TH1F(name, title, 200, 0., 1000.);
          h_effFlux[iwbc][i]->Sumw2();
 
@@ -687,5 +683,49 @@ void tbAna::bookHistos() {
       }
 
    }//loop over WBC values
+
+}
+
+void tbAna::loadHistogramsFromFile(char* fname) {
+   TFile *f = new TFile(fname);
+   if(f->IsZombie()) {
+      cout << "ERROR: File " << fname << " does not exist\n";
+      return;
+   }
+   else {
+      cout << "Loading histograms from " << fname << endl;
+   }
+
+   char suffix[16];
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      for(int i=0; i<3; i++) { //loop over histograms (usually tracks and hits, for efficiency)
+         if(0==i)      sprintf(suffix, "tracks");
+         else if(1==i) sprintf(suffix, "hits");
+         else          sprintf(suffix, "efficiency");
+
+         h_effFlux[iwbc][i] = (TH1F*) f->Get(Form("h_effFlux_wbc%d_%s",WBCvalue[iwbc],suffix));
+         h_effNHits[iwbc][i] = (TH1F*) f->Get(Form("h_effNHits_wbc%d_%s",WBCvalue[iwbc],suffix));
+         h_effSpill[iwbc][i] = (TH1F*) f->Get(Form("h_effSpill_wbc%d_%s",WBCvalue[iwbc],suffix));
+
+         h_effMap[iwbc][i] = (TH2F*) f->Get(Form("h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix));
+         h_effMapWide[iwbc][i] = (TH2F*) f->Get(Form("h_effMapWide_wbc%d_%s",WBCvalue[iwbc],suffix));
+      }
+
+      //set up graphs
+      g_effFlux[iwbc] = new TGraphAsymmErrors();
+      g_effNHits[iwbc] = new TGraphAsymmErrors();
+      g_effSpill[iwbc] = new TGraphAsymmErrors();
+
+      for(int i=0; i<2; i++) {//loop over residual histograms
+         if(0==i) sprintf(suffix, "mean");
+         else     sprintf(suffix, "sigma");
+
+         for(int iD=0; iD<nD; iD++) {
+            h_resSpill[iwbc][iD][i] = (TH1F*) f->Get(Form("h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix));
+         }
+      }
+
+   }//loop over WBC values
+   
 
 }
