@@ -160,10 +160,10 @@ void treeCorrelator::createMapQuick() {
    tree->GetEntry(initEvent);
    int time_ref = TimeStamp;
    int evt_t0 = 0;
-   //cout << "Reference event: " << EventNumber << ", time: " << time_ref << endl;
+   // cout << "Reference event: " << EventNumber << ", time: " << time_ref << endl;
    for(int iEvt=0; iEvt<initEvent; iEvt++) {
       tree->GetEntry(iEvt);
-      //cout << " iEvt " << iEvt << ", event " << EventNumber << ", time " << TimeStamp << endl;
+      // cout << " iEvt " << iEvt << ", event " << EventNumber << ", time " << TimeStamp << endl;
       if((time_ref-TimeStamp)>spillGap)
          evt_t0 = EventNumber;
    }
@@ -318,7 +318,7 @@ void treeCorrelator::initTpTree() {
    string TPfilename = stream.str();
    TFile *f = new TFile(TPfilename.c_str());
    if(f->IsZombie()) {
-      std::cout << "File " << TPfilename << " does not exist\n";
+      cout << "File " << TPfilename << " does not exist\n";
       tree = NULL;
       return;
    }
@@ -349,7 +349,7 @@ void treeCorrelator::initQieTree() {
    string QIEfilename = stream.str();
    TFile *f = new TFile(QIEfilename.c_str());
    if(f->IsZombie()) {
-      std::cout << "File " << QIEfilename << " does not exist\n";
+      cout << "File " << QIEfilename << " does not exist\n";
       tree_summary = NULL;
       return;
    }
