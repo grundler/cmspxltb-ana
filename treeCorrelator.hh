@@ -27,8 +27,9 @@ public:
    
    int getQieEvent(int EvtNumr);
    int getTriggerPhase(int EvtNumr);
-   float getFlux(int trigCount);
    int getWBC() { return _wbc; };
+   float getFlux(int trigCount);
+   float getFluxRatio(int trigCount);
 
 private:
    const int    _spill;
@@ -44,7 +45,7 @@ private:
    void initTpTree();
    void initQieTree();
 
-   float calcFlux();
+   float calcFlux(float nproton);
 
    TChain *tree;
    
@@ -71,6 +72,8 @@ private:
 
    //map qie event and intensity
    map<int, float> _fluxMap;
+   //map qie event and max intensity
+   map<int, float> _maxMap;
    
 };
 

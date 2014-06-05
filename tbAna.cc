@@ -28,6 +28,8 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
    chi2_50 = "Chi2<50.";
    chi2_600 = "Chi2<600.";
 
+   maxFluxRatio = 5.;
+
    char tmptxt[256];
    sprintf(tmptxt,"((dut%s-fit%s_%d)<%f && (dut%s-fit%s_%d)>%f) && ((dut%s-fit%s_%d)<%f && (dut%s-fit%s_%d)>%f)",
            D[0], D[0], _DUTID, resHi[0], D[0], D[0], _DUTID, resLo[0],
@@ -113,12 +115,11 @@ void tbAna::analyze(TCut myCut) {
 
          int qieevt = _tc->getQieEvent(EvtNr);
          float flux = _tc->getFlux(qieevt);
+         float ratio = _tc->getFluxRatio(qieevt);
 
          // cout << "\tiEvt " << iEvt << " qieevt " << qieevt << " flux " << flux << endl;
-         if(flux < 0.)
-            continue;
-
-         //add ratio cut?
+         if(flux < 0.) continue;
+         if(ratio > maxFluxRatio) continue;
 
          //Track has passed, fill track-level information
          h_effFlux[_wbcBin][0]->Fill(flux);

@@ -28,6 +28,7 @@ treeCorrelator::treeCorrelator(int spill, string board, int algo)
    _syncMap.clear();
    _tpMap.clear();
    _fluxMap.clear();
+   _maxMap.clear();
 
    cout << "\tInitializing maps for spill " << _spill << endl;
 
@@ -117,7 +118,10 @@ void treeCorrelator::createMapLong() {
                + previousInformation[0];
             if(fabs((TimeStamp - TimeStampOffset) - TrimTimestamp_) < 2) {
                currentDiff = EventNumber - summary_Trigger_count;
-               _fluxMap[summary_Trigger_count] = calcFlux();
+               _fluxMap[summary_Trigger_count] =  summary_Trigger_Nproton 
+                                                + summary_Trigger_Nproton_minusWBC 
+                                                - summary_Trigger_Nproton_itself;//calcFlux();
+               _maxMap[summary_Trigger_count] = summary_Trigger_Nproton_maximum;
 
                previousInformation[0] = TimeStamp - TimeStampOffset;
                previousInformation[1] = iQIE;
@@ -182,7 +186,10 @@ void treeCorrelator::createMapQuick() {
    vector<int> qie_evtnr;
    for(int iQIE=0; iQIE<tree_summary->GetEntries(); iQIE++) {
       tree_summary->GetEntry(iQIE);
-      _fluxMap[summary_Trigger_count] = calcFlux(); //make map of flux while we're at it
+      _fluxMap[summary_Trigger_count] =  summary_Trigger_Nproton 
+                                       + summary_Trigger_Nproton_minusWBC 
+                                       - summary_Trigger_Nproton_itself;//calcFlux();
+      _maxMap[summary_Trigger_count] = summary_Trigger_Nproton_maximum;
 
       int dturn = summary_Trigger_turn_onset-turn_p;
       if(dturn>turnGap || summary_Trigger_turn_onset==1) {
@@ -258,13 +265,30 @@ int treeCorrelator::getTriggerPhase(int EvtNumr) {
 float treeCorrelator::getFlux(int trigCount) {
    map<int, float>::iterator it;
    it = _fluxMap.find(trigCount);
-   if(it != _fluxMap.end())
-      return it->second;
+   if(it != _fluxMap.end()) 
+      return calcFlux(it->second);
 
    return -1.;
 }
 
-float treeCorrelator::calcFlux() {
+float treeCorrelator::getFluxRatio(int trigCount) {
+   float fluxMax = -1.;
+   float flux = 1.;
+
+   map<int, float>::iterator it;
+
+   it = _fluxMap.find(trigCount);
+   if(it != _fluxMap.end()) 
+      flux = it->second;
+
+   it = _maxMap.find(trigCount);
+   if(it != _maxMap.end()) 
+      fluxMax = it->second;
+
+   return (flux > 0. ? fluxMax/(flux/(_nBuckets*2.-1.)) : -1.);
+}
+
+float treeCorrelator::calcFlux(float nproton) {
 
    float qb6 = 0.6755; //qie coverage of beam in x (6mm width)
    float qb5 = 0.7517; //qie coverage of beam in y (5mm width)
@@ -274,9 +298,9 @@ float treeCorrelator::calcFlux() {
    float dx = 0.8; //width of roc in x
    float dy = 0.8; //width of roc in y
 
-   float nproton = summary_Trigger_Nproton 
-      + summary_Trigger_Nproton_minusWBC
-      - summary_Trigger_Nproton_itself;
+   // float nproton = summary_Trigger_Nproton 
+   //    + summary_Trigger_Nproton_minusWBC
+   //    - summary_Trigger_Nproton_itself;
 
    nproton /= (_nBuckets*2.-1.);
 

@@ -59,6 +59,7 @@ private:
    TCut slopeCut;
    TCut isFiducial;
    int  correctTriggerPhase;
+   float maxFluxRatio;
 
    //Histograms and graphs
 
