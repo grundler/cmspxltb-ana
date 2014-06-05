@@ -1,5 +1,10 @@
+//Directory where trees are found (in heirarchy <board>/<treeSubDir>)
 static const char subdir[128] = "/afs/cern.ch/work/g/grundler/public/testbeam/cmspxltb-submission";
-static const char plotDir[64] = "plots";
+
+//Place to put output
+static const char outDir[64] = "output";
+
+//extension for plots, probably want pdf or png to go in LaTeX
 static const char plotExt[8] = "pdf";
 
 static const float fnalClock = 53.104; //MHz

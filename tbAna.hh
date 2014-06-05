@@ -48,6 +48,7 @@ private:
    const int _firstSpill;
    const int _finalSpill;
    const int _algo;
+   string _outDir;
 
    //Info to correlate QIE and telescope data
    treeCorrelator* _tc;
