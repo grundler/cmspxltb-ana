@@ -62,7 +62,7 @@ tbAna::~tbAna() {
 
 void tbAna::analyze(TCut myCut) {
 
-   int maxFlux = 0.;
+   float maxFlux = 0.;
 
    for(int iSpill=_firstSpill;  iSpill<=_finalSpill; iSpill++) {
       if(!initSpill(iSpill)) {
@@ -112,7 +112,7 @@ void tbAna::analyze(TCut myCut) {
             continue;
 
          int qieevt = _tc->getQieEvent(EvtNr);
-         int flux = _tc->getFlux(qieevt);
+         float flux = _tc->getFlux(qieevt);
 
          // cout << "\tiEvt " << iEvt << " qieevt " << qieevt << " flux " << flux << endl;
          if(flux < 0.)
