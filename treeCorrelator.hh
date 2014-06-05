@@ -41,6 +41,8 @@ private:
 
    void createMapLong();
    void createMapQuick();
+   void initTpTree();
+   void initQieTree();
 
    float calcFlux();
 
@@ -56,13 +58,10 @@ private:
    int summary_Trigger_count;
    int summary_Trigger_RF_onset;
    int summary_Trigger_turn_onset;
-   int summary_Trigger_BeamIntensity_itself;
-   int summary_Trigger_BeamIntensity_minusWBC;
-   int summary_Trigger_BeamIntensity;
    float summary_Trigger_Nproton_itself;
    float summary_Trigger_Nproton_minusWBC;
    float summary_Trigger_Nproton;
-
+   float summary_Trigger_Nproton_maximum;
 
    //map eutelescope event and qie event
    map<int, int> _syncMap;

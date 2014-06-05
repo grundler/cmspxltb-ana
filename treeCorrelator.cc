@@ -31,74 +31,17 @@ treeCorrelator::treeCorrelator(int spill, string board, int algo)
 
    cout << "\tInitializing maps for spill " << _spill << endl;
 
-   ostringstream stream;
-   stream << subdir << "/" << _board << "/qie/summary_" << _spill << ".root";
-   string QIEfilename = stream.str();
-   TFile *f = new TFile(QIEfilename.c_str());
-   if(f->IsZombie()) {
-      std::cout << "File " << QIEfilename << " does not exist\n";
-      return;
-   }
-   TH1F *hWBC = (TH1F*)f->Get("hsummary_WBC");
-   if(hWBC)
-      _wbc = hWBC->GetBinContent(1);
-   else {
-      cout << "Couldn't get WBC. Skipping\n";
-      return;
-   }
-   // _wbc = ((TH1F*)f->Get("hsummary_WBC"))->GetBinContent(1);
-   TH1F *hBuckets = (TH1F*)f->Get("hsummary_Buckets_in_intensity");
-   if(hBuckets)
-      _nBuckets = hBuckets->GetBinContent(1);
-   else {
-      cout << "Couldn't get number of buckets. Skipping\n";
-      return;
-   }
-   cout << "nBuckets = " << _nBuckets << endl;
-   //_nBuckets = ((TH1F*)f->Get("hsummary_Buckets_in_intensity"))->GetBinContent(1);
-
-   stream.str("");
-   stream << subdir << "/" << _board << "/timestamps/" << _spill << "_tp.root";
-   string TBfilename = stream.str();
-   f = new TFile(TBfilename.c_str());
-   if(f->IsZombie()) {
-      std::cout << "File " << TBfilename << " does not exist\n";
+   initTpTree();
+   if(tree==NULL) {
+      cout << "\tCould not get trigger phase information for spill " << _spill << ". Skipping\n";
       return;
    }
 
-   tree_summary = new TChain("tree_summary");
-   tree_summary->Add(QIEfilename.c_str());
-   
-   summary_Trigger_count = -1;
-   summary_Trigger_RF_onset = 0;
-   summary_Trigger_turn_onset = 0;
-   summary_Trigger_BeamIntensity_itself = 0; // itself
-   summary_Trigger_BeamIntensity_minusWBC = 0;
-   summary_Trigger_BeamIntensity = 0;
-   summary_Trigger_Nproton_itself = 0.; // itself
-   summary_Trigger_Nproton_minusWBC = 0.;
-   summary_Trigger_Nproton = 0.;
-   tree_summary->SetBranchAddress("summary_Trigger_count",&summary_Trigger_count);
-   tree_summary->SetBranchAddress("summary_Trigger_RF_onset",&summary_Trigger_RF_onset);
-   tree_summary->SetBranchAddress("summary_Trigger_turn_onset",&summary_Trigger_turn_onset);
-   tree_summary->SetBranchAddress("summary_Trigger_BeamIntensity_itself",&summary_Trigger_BeamIntensity_itself);
-   tree_summary->SetBranchAddress("summary_Trigger_BeamIntensity_minusWBC",&summary_Trigger_BeamIntensity_minusWBC);
-   tree_summary->SetBranchAddress("summary_Trigger_BeamIntensity",&summary_Trigger_BeamIntensity);
-   tree_summary->SetBranchAddress("summary_Trigger_Nproton_itself",&summary_Trigger_Nproton_itself);
-   tree_summary->SetBranchAddress("summary_Trigger_Nproton_minusWBC",&summary_Trigger_Nproton_minusWBC);
-   tree_summary->SetBranchAddress("summary_Trigger_Nproton",&summary_Trigger_Nproton);
-
-   tree = new TChain("tree");
-   tree->Add(TBfilename.c_str());
-
-   EventNumber = 0;
-   TimeStamp = 0;
-   dtime = 0;
-   TriggerPhase = 0;
-   tree->SetBranchAddress("EventNumber",&EventNumber);
-   tree->SetBranchAddress("TimeStamp",&TimeStamp);
-   tree->SetBranchAddress("dtime",&dtime);
-   tree->SetBranchAddress("TriggerPhase",&TriggerPhase);
+   initQieTree();
+   if(tree_summary==NULL) {
+      cout << "\tCould not get QIE information for spill " << _spill << ". Skipping\n";
+      return;
+   }
 
    if(_algo == 0)
       createMapLong();
@@ -341,4 +284,90 @@ float treeCorrelator::calcFlux() {
    float flux = nproton * (fnalClock/qb6/qb5) * (rbx*rby/dx/dy);
 
    return flux;
+}
+
+void treeCorrelator::initTpTree() {
+
+   //Open file
+   ostringstream stream;
+   stream << subdir << "/" << _board << "/timestamps/" << _spill << "_tp.root";
+   string TPfilename = stream.str();
+   TFile *f = new TFile(TPfilename.c_str());
+   if(f->IsZombie()) {
+      std::cout << "File " << TPfilename << " does not exist\n";
+      tree = NULL;
+      return;
+   }
+
+   //Load tree
+   tree = new TChain("tree");
+
+   tree->SetBranchStatus("*",kFALSE);
+
+   tree->SetBranchStatus("EventNumber",kTRUE);
+   tree->SetBranchStatus("TimeStamp",kTRUE);
+   tree->SetBranchStatus("dtime",kTRUE);
+   tree->SetBranchStatus("TriggerPhase",kTRUE);
+
+   tree->SetBranchAddress("EventNumber",&EventNumber);
+   tree->SetBranchAddress("TimeStamp",&TimeStamp);
+   tree->SetBranchAddress("dtime",&dtime);
+   tree->SetBranchAddress("TriggerPhase",&TriggerPhase);
+
+   tree->Add(TPfilename.c_str());
+}
+
+void treeCorrelator::initQieTree() {
+
+   //Open file
+   ostringstream stream;
+   stream << subdir << "/" << _board << "/qie/summary_" << _spill << ".root";
+   string QIEfilename = stream.str();
+   TFile *f = new TFile(QIEfilename.c_str());
+   if(f->IsZombie()) {
+      std::cout << "File " << QIEfilename << " does not exist\n";
+      tree_summary = NULL;
+      return;
+   }
+
+   //Get WBC and number of buckets while the file is open
+   TH1F *hWBC = (TH1F*)f->Get("hsummary_WBC");
+   if(hWBC)
+      _wbc = hWBC->GetBinContent(1);
+   else {
+      cout << "Couldn't get WBC. Skipping\n";
+      return;
+   }
+   TH1F *hBuckets = (TH1F*)f->Get("hsummary_Buckets_in_intensity");
+   if(hBuckets)
+      _nBuckets = hBuckets->GetBinContent(1);
+   else {
+      cout << "Couldn't get number of buckets. Skipping\n";
+      return;
+   }
+   cout << "nBuckets = " << _nBuckets << endl;
+
+   //Load tree
+   tree_summary = new TChain("tree_summary");
+
+   tree_summary->SetBranchStatus("*",kFALSE);
+
+   tree_summary->SetBranchStatus("summary_Trigger_count",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_RF_onset",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_turn_onset",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_Nproton_itself",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_Nproton_minusWBC",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_Nproton",kTRUE);
+   tree_summary->SetBranchStatus("summary_Trigger_Nproton_maximum",kTRUE);
+
+   summary_Trigger_count = -1;
+   tree_summary->SetBranchAddress("summary_Trigger_count",&summary_Trigger_count);
+   tree_summary->SetBranchAddress("summary_Trigger_RF_onset",&summary_Trigger_RF_onset);
+   tree_summary->SetBranchAddress("summary_Trigger_turn_onset",&summary_Trigger_turn_onset);
+   tree_summary->SetBranchAddress("summary_Trigger_Nproton_itself",&summary_Trigger_Nproton_itself);
+   tree_summary->SetBranchAddress("summary_Trigger_Nproton_minusWBC",&summary_Trigger_Nproton_minusWBC);
+   tree_summary->SetBranchAddress("summary_Trigger_Nproton",&summary_Trigger_Nproton);
+   tree_summary->SetBranchAddress("summary_Trigger_Nproton_maximum",&summary_Trigger_Nproton_maximum);
+
+   tree_summary->Add(QIEfilename.c_str());
 }
