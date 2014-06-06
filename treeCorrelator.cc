@@ -101,7 +101,7 @@ void treeCorrelator::createMapLong() {
       //    printf("\t\ttreeCorrelator on %1.3f %% (%i th : %i)\r",100.*itimestamp/tree->GetEntries(), itimestamp, TimeStamp);
       if(TimeStampOffset!=-1&&(TimeStamp - TimeStampOffset)>=0) {
           
-         if(TimeStamp - TimeStampOffset==0){
+         if(TimeStamp - TimeStampOffset==0) {
             tree_summary->GetEntry(0);
             previousInformation[0] = 0;
             previousInformation[1] = 0;
@@ -312,6 +312,8 @@ float treeCorrelator::calcFlux(float nproton) {
 
 void treeCorrelator::initTpTree() {
 
+   tree = NULL;
+
    //Open file
    ostringstream stream;
    stream << subdir << "/" << _board << "/timestamps/" << _spill << "_tp.root";
@@ -319,7 +321,6 @@ void treeCorrelator::initTpTree() {
    TFile *f = new TFile(TPfilename.c_str());
    if(f->IsZombie()) {
       cout << "File " << TPfilename << " does not exist\n";
-      tree = NULL;
       return;
    }
 
@@ -343,6 +344,8 @@ void treeCorrelator::initTpTree() {
 
 void treeCorrelator::initQieTree() {
 
+   tree_summary = NULL;
+
    //Open file
    ostringstream stream;
    stream << subdir << "/" << _board << "/qie/summary_" << _spill << ".root";
@@ -350,7 +353,6 @@ void treeCorrelator::initQieTree() {
    TFile *f = new TFile(QIEfilename.c_str());
    if(f->IsZombie()) {
       cout << "File " << QIEfilename << " does not exist\n";
-      tree_summary = NULL;
       return;
    }
 
