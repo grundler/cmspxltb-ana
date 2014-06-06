@@ -25,6 +25,7 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
      _DUTID(dutID),
      _firstSpill(spill0),
      _finalSpill(spill1),
+     _nSpills(1+_finalSpill-_firstSpill),
      _algo(algo)
 {
    //Set TCuts
@@ -64,6 +65,7 @@ tbAna::~tbAna() {
          delete h_effMapWide[iwbc][i];
          
          if(i<2)
+            delete h_tpSpill[iwbc][i];
             for(int j=0; j<nD; j++)
                delete h_resSpill[iwbc][j][i];
       }
@@ -74,6 +76,7 @@ tbAna::~tbAna() {
 void tbAna::analyze(TCut myCut) {
 
    float maxFlux = 0.;
+   int maxEvt = 0;
 
    for(int iSpill=_firstSpill;  iSpill<=_finalSpill; iSpill++) {
       if(!initSpill(iSpill)) {
@@ -141,8 +144,10 @@ void tbAna::analyze(TCut myCut) {
          h_effMap[_wbcBin][0]->Fill(dutFitX, dutFitY);
          h_effMapWide[_wbcBin][0]->Fill(dutFitX, dutFitY);
 
-         if(flux > maxFlux) 
+         if(flux > maxFlux) { 
             maxFlux = flux;
+            maxEvt = EvtNr;
+         }
 
          //If hit on track, fill hit-level information
          if(goodHits->Contains(entry)) {
@@ -161,7 +166,7 @@ void tbAna::analyze(TCut myCut) {
       delete _tc;
    }
 
-   cout << "max flux seen: " << maxFlux << endl;
+   cout << "max flux seen: " << maxFlux << ", at event " << maxEvt << endl;
 
    ostringstream stream;
    stream << _outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill << ".root";
@@ -180,6 +185,7 @@ void tbAna::analyze(TCut myCut) {
          h_effMap[iwbc][i]->Write();
          h_effMapWide[iwbc][i]->Write();
          if(i<2)
+            h_tpSpill[iwbc][i]->Write();
             for(int iD=0; iD<nD; iD++) {
                h_resSpill[iwbc][iD][i]->Write();
             }
@@ -241,8 +247,6 @@ void tbAna::makePlots() {
    leg->Draw();
    slide->SaveAs(Form("%s/eff_vs_nhits_%s.%s",_outDir.c_str(),_testBoard.c_str(),plotExt));
 
-   int nSpills = 1+_finalSpill-_firstSpill;
-
    slide = util->newSlide(TString::Format("eff_vs_spill_%s",_testBoard.c_str()),"");
    h_effSpill[0][2]->GetXaxis()->SetNoExponent();
    h_effSpill[0][2]->Draw();
@@ -255,7 +259,7 @@ void tbAna::makePlots() {
 
    for(int iD=0; iD<nD; iD++) {
       slide = util->newSlide(TString::Format("res%s_vs_spill_%s",D[iD],_testBoard.c_str()),"");
-      TH2F *hSpaceRes = new TH2F("hSpaceRes", Form("Mean %s residual vs spill %s",D[iD],_testBoard.c_str()), nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
+      TH2F *hSpaceRes = new TH2F("hSpaceRes", Form("Mean %s residual vs spill %s",D[iD],_testBoard.c_str()), _nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
       hSpaceRes->GetXaxis()->SetNoExponent();
       hSpaceRes->SetXTitle("Spill");
       hSpaceRes->SetStats(0);
@@ -415,7 +419,7 @@ bool tbAna::initSpill(int spill) {
    }
 
    //Set one more cut
-   if(!setTriggerPhaseCut())
+   if(!setTriggerPhaseCut(spill))
       return false;
 
    return true;
@@ -510,7 +514,7 @@ bool tbAna::setFiducialCut() {
    return true;
 }
 
-bool tbAna::setTriggerPhaseCut() {
+bool tbAna::setTriggerPhaseCut(int spill) {
 
    correctTriggerPhase = -1;
 
@@ -522,39 +526,34 @@ bool tbAna::setTriggerPhaseCut() {
    _trackTree->Draw(">>tphits", bCut, "entrylist");
    TEntryList *tpHits = (TEntryList*) gDirectory->Get("tphits");
 
-   int nPhases = 8;
-   char title[128], name[256];
-   sprintf(name, "hitsTP");
-   sprintf(title, "HitsOnTrack vs TriggerPhase");
-   TH1F* hitsTP = new TH1F(name, title, nPhases, -0.5, nPhases-0.5);
-
-   sprintf(name, "tracksTP");
-   sprintf(title, "Tracks vs TriggerPhase");
-   TH1F* tracksTP = new TH1F(name, title, nPhases, -0.5, nPhases-0.5);
-
    for(int iEvt=0; iEvt<(int)tpTracks->GetN(); iEvt++) {
       int entry = tpTracks->GetEntry(iEvt);
       loadTrackEntry(entry);      
 
       int TriggerPhase = _tc->getTriggerPhase(EvtNr);
       if(tpHits->Contains(entry)) {
-         hitsTP->Fill(TriggerPhase);
+         h_tpSpill[_wbcBin][1]->Fill(spill, TriggerPhase);
+         // std::cout << "iEvt " << iEvt << ", event " << EvtNr << ", tp " << TriggerPhase << ", has hit\n";
       }
 
-      tracksTP->Fill(TriggerPhase);
+      h_tpSpill[_wbcBin][0]->Fill(spill, TriggerPhase);
    }
 
    TGraphAsymmErrors *tgaeTP = new TGraphAsymmErrors();
    tgaeTP->SetName("tgaeTP");
    tgaeTP->SetTitle("Efficiency vs TriggerPhase");
-   tgaeTP->Divide(hitsTP,tracksTP,"cl=0.683 b(1,1) mode");
+
+   int spillBin = 1 + spill - _firstSpill;
+   tgaeTP->Divide(h_tpSpill[_wbcBin][1]->ProjectionY("_py",spillBin,spillBin,"e"),
+                  h_tpSpill[_wbcBin][0]->ProjectionY("_py",spillBin,spillBin,"e"),
+                  "cl=0.683 b(1,1) mode");
 
    int tpMax=-1;
    float effMax=0.;
    for(int ibin=0; ibin<tgaeTP->GetN(); ibin++) {
       double tp,eff;
       tgaeTP->GetPoint(ibin, tp, eff);
-      // cout << " TriggerPhase " << ibin << ", tp,eff=" << tp << "," << eff << endl; 
+      cout << " TriggerPhase " << ibin << ", tp,eff=" << tp << "," << eff << endl; 
       if(eff>effMax) {
          tpMax = ibin;
          effMax = eff;
@@ -639,8 +638,6 @@ void tbAna::bookHistos() {
 
    char title[128], name[256];
 
-   int nSpills = 1+_finalSpill-_firstSpill;
-
    char suffix[16];
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
       for(int i=0; i<3; i++) { //loop over histograms (usually tracks and hits, for efficiency)
@@ -660,7 +657,7 @@ void tbAna::bookHistos() {
 
          sprintf(name, "h_effSpill_wbc%d_%s",WBCvalue[iwbc],suffix);
          sprintf(title, "%s vs spill",suffix);
-         h_effSpill[iwbc][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+         h_effSpill[iwbc][i] = new TH1F(name, title, _nSpills, _firstSpill-0.5, _finalSpill+0.5);
          h_effSpill[iwbc][i]->Sumw2();
 
          sprintf(name, "h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix);
@@ -673,6 +670,13 @@ void tbAna::bookHistos() {
          h_effMapWide[iwbc][i] = new TH2F(name, title,30,-4.5,4.5,45,-4.5,4.5);
          h_effMapWide[iwbc][i]->Sumw2();
 
+         if(i>1) continue;
+
+         sprintf(name, "h_tpSpill_wbc%d_%s",WBCvalue[iwbc],suffix);
+         sprintf(title, "%s - spill/trigger phase (WBC %d)",suffix,WBCvalue[iwbc]);
+         h_tpSpill[iwbc][i] = new TH2F(name, title,_nSpills,_firstSpill-0.5,_finalSpill+0.5,nPhases,-0.5,nPhases-0.5);
+         h_tpSpill[iwbc][i]->Sumw2();
+
       }
 
       for(int i=0; i<2; i++) {//loop over residual histograms
@@ -682,7 +686,7 @@ void tbAna::bookHistos() {
          for(int iD=0; iD<nD; iD++) {
             sprintf(name, "h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix);
             sprintf(title, "%s residual %s vs spill (WBC %d)",D[iD],suffix,WBCvalue[iwbc]);
-            h_resSpill[iwbc][iD][i] = new TH1F(name, title, nSpills, _firstSpill-0.5, _finalSpill+0.5);
+            h_resSpill[iwbc][iD][i] = new TH1F(name, title, _nSpills, _firstSpill-0.5, _finalSpill+0.5);
          }
       }
 
@@ -713,6 +717,9 @@ void tbAna::loadHistogramsFromFile(char* fname) {
 
          h_effMap[iwbc][i] = (TH2F*) f->Get(Form("h_effMap_wbc%d_%s",WBCvalue[iwbc],suffix));
          h_effMapWide[iwbc][i] = (TH2F*) f->Get(Form("h_effMapWide_wbc%d_%s",WBCvalue[iwbc],suffix));
+
+         if(i>1) continue;
+         h_tpSpill[iwbc][i] = (TH2F*) f->Get(Form("h_tpSpill_wbc%d_%s",WBCvalue[iwbc],suffix));
       }
 
       for(int i=0; i<2; i++) {//loop over residual histograms

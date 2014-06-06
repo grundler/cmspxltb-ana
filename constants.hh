@@ -10,6 +10,8 @@ static const char plotExt[8] = "pdf";
 static const float fnalClock = 53.104; //MHz
 static const float tbClock   = 40.; //MHz
 
+static const int nPhases = 8; //trigger phases
+
 enum WBC{wbc99,
          wbc140,
          wbc159,

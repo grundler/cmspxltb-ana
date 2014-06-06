@@ -33,7 +33,7 @@ private:
 
    bool setSlopeCut();
    bool setFiducialCut();
-   bool setTriggerPhaseCut();
+   bool setTriggerPhaseCut(int spill);
 
    void initTrackTree(int spill);
    void loadTrackEntry(int entry);
@@ -47,6 +47,7 @@ private:
    const int _DUTID;
    const int _firstSpill;
    const int _finalSpill;
+   const int _nSpills;
    const int _algo;
    string _outDir;
 
@@ -73,6 +74,7 @@ private:
    TH1F *h_effSpill[nWBC][3];
 
    TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
+   TH2F *h_tpSpill[nWBC][2]; //for efficency vs trigger phase for each spill
 
    //geometrical
    TH2F *h_effMap[nWBC][3]; //tracks/hits/efficiency maps
