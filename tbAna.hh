@@ -69,6 +69,7 @@ private:
    //vs flux
    TH1F *h_effFlux[nWBC][3]; 
    TH1F *h_effNHits[nWBC][3]; 
+   TH2F *h_nHitsFlux[nWBC];
 
    //vs spill
    TH1F *h_effSpill[nWBC][3];

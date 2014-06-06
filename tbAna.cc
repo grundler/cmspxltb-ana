@@ -69,6 +69,7 @@ tbAna::~tbAna() {
             for(int j=0; j<nD; j++)
                delete h_resSpill[iwbc][j][i];
       }
+      delete h_nHitsFlux[iwbc];
    }
    
 }
@@ -137,6 +138,7 @@ void tbAna::analyze(TCut myCut) {
          h_effFlux[_wbcBin][0]->Fill(flux);
          h_effNHits[_wbcBin][0]->Fill(nhits_4);
          h_effSpill[_wbcBin][0]->Fill(iSpill);
+         h_nHitsFlux[_wbcBin]->Fill(flux,nhits_4);
 
          float dutFitX=-999., dutFitY=-999.;
          getDUTFitPosition(dutFitX, dutFitY);
@@ -190,6 +192,7 @@ void tbAna::analyze(TCut myCut) {
                h_resSpill[iwbc][iD][i]->Write();
             }
       }
+      h_nHitsFlux[iwbc]->Write();
    }
    f->Close();
 }
@@ -357,7 +360,7 @@ void tbAna::makePlots() {
          if(tpTrks->GetSumOfWeights() > 0) {
             g_tpSpill[spillBin-1]->Divide(tpHits, tpTrks, "cl=0.683 b(1,1) mode");
             wbc = WBCvalue[iwbc];
-            s_tpSpill[spillBin-1] = new TH1F(Form("h_tpSpill%d_wbc%d",ispill,wbc), 
+            s_tpSpill[spillBin-1] = new TH1F(Form("h_tpSpill%d_wbc%d",ispill,wbc),
                                          Form("Efficiency vs trigger phase (%d, WBC %d)",ispill,wbc),
                                          nPhases,-0.5,nPhases-0.5);
             util->graphSetting(g_tpSpill[spillBin-1],s_tpSpill[spillBin-1],
@@ -722,6 +725,13 @@ void tbAna::bookHistos() {
          }
       }
 
+      sprintf(name, "h_nHitsFlux_wbc%d",WBCvalue[iwbc]);
+      sprintf(title, "hits vs flux (WBC %d)", WBCvalue[iwbc]);
+      h_nHitsFlux[iwbc] = new TH2F(name, title, 200, 0., 1000., 100, -0.5, 99.5);
+      h_nHitsFlux[iwbc]->SetXTitle("Flux");
+      h_nHitsFlux[iwbc]->SetYTitle("Hits");
+      h_nHitsFlux[iwbc]->Sumw2();
+
    }//loop over WBC values
 
 }
@@ -762,6 +772,8 @@ void tbAna::loadHistogramsFromFile(char* fname) {
             h_resSpill[iwbc][iD][i] = (TH1F*) f->Get(Form("h_res%sSpill_wbc%d_%s",D[iD],WBCvalue[iwbc],suffix));
          }
       }
+
+      h_nHitsFlux[iwbc] = (TH2F*) f->Get(Form("h_nHitsFlux_wbc%d",WBCvalue[iwbc]));
 
    }//loop over WBC values
    
