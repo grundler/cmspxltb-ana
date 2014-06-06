@@ -23,5 +23,6 @@ enum WBC{wbc99,
 };
 
 static const int WBCvalue[nWBC] = {99, 140, 159, 175, 200, 225, 255};
-static const int WBCcolor[nWBC] = {5, 1, 2, 4, 3, 6, 7};
-static const int WBCstyle[nWBC] = {24, 20, 21, 22, 23, 25, 26};
+static const int WBCcolor[nWBC] = {5, 1, 2, 4, 8, 6, 7};
+// static const int WBCstyle[nWBC] = {24, 20, 21, 22, 23, 25, 26};
+static const int WBCstyle[nWBC] = {8, 8, 8, 8, 8, 8, 8};

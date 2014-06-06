@@ -46,6 +46,9 @@ void utils::graphSetting(TGraph* g, TH1F* h,
    h->SetStats(0);
    h->SetMaximum(1.02);
    h->SetMinimum(0.8);
+   h->SetNdivisions(110,"Y");
+   h->SetNdivisions(110,"X");
+   h->SetLineWidth(1);
 
    g->SetHistogram(h);
 }
@@ -61,7 +64,7 @@ void utils::spacerSetting(TH2* h, TGraph* g) {
 }
 
 TCanvas* utils::newSlide(TString name, TString title) {
-   TCanvas* slide = new TCanvas(name, title, 0, 0, 1000, 600);
+   TCanvas* slide = new TCanvas(name, title, 0, 0, 700, 500);
 
    slide->SetLeftMargin(0.10);
    slide->SetBottomMargin(0.135);
@@ -74,4 +77,7 @@ TCanvas* utils::newSlide(TString name, TString title) {
 void utils::legendSetting(TLegend* l) {
    l->SetFillColor(10);
    l->SetBorderSize(0);
+
+   l->SetTextFont(72);
+   l->SetTextSize(0.04);
 }

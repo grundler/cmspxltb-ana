@@ -200,6 +200,9 @@ void tbAna::analyze(TCut myCut) {
 void tbAna::makePlots() {
    utils* util = new utils();
 
+   int startWBC = wbc140;
+   int finalWBC = wbc200;
+
    TCanvas * slide;
 
    char slideT[256], slideN[256], slideF[256];
@@ -208,6 +211,11 @@ void tbAna::makePlots() {
    TGraphAsymmErrors *g_effNHits[nWBC];
    TGraphAsymmErrors *g_effSpill[nWBC];
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   // for(int iwbc=startWBC; iwbc<=finalWBC; iwbc++) {
+      for(int i=0; i<2; i++) {
+         h_effFlux[iwbc][i]->Rebin(5);
+      }
+
       g_effFlux[iwbc] = new TGraphAsymmErrors();
       g_effFlux[iwbc]->Divide(h_effFlux[iwbc][1],h_effFlux[iwbc][0],"cl=0.683 b(1,1) mode");
       util->graphSetting(g_effFlux[iwbc],h_effFlux[iwbc][2],
@@ -228,11 +236,13 @@ void tbAna::makePlots() {
    }
 
    slide = util->newSlide(TString::Format("eff_vs_flux_%s",_testBoard.c_str()),"");
-   TLegend* leg = new TLegend(0.1,0.15,0.25,0.35);
+   // TLegend* leg = new TLegend(0.1,0.15,0.25,0.35);
+   TLegend* leg = new TLegend(0.15,0.20,0.38,0.41);
    util->legendSetting(leg);
-   h_effFlux[0][2]->GetXaxis()->SetRangeUser(0.,500.);
+   h_effFlux[0][2]->GetXaxis()->SetRangeUser(0.,250.);
    h_effFlux[0][2]->Draw();
-   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   // for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   for(int iwbc=startWBC; iwbc<=finalWBC; iwbc++) {
       if(h_effFlux[iwbc][0]->GetEntries() == 0) continue;
       g_effFlux[iwbc]->Draw("pe same");
       leg->AddEntry(g_effFlux[iwbc],Form("WBC=%d",WBCvalue[iwbc]),"p");
@@ -241,9 +251,10 @@ void tbAna::makePlots() {
    slide->SaveAs(Form("%s/eff_vs_flux_%s.%s",_outDir.c_str(),_testBoard.c_str(),plotExt));
 
    slide = util->newSlide(TString::Format("eff_vs_nhits_%s",_testBoard.c_str()),"");
-   h_effNHits[0][2]->GetXaxis()->SetRange(1,25);
+   h_effNHits[0][2]->GetXaxis()->SetRange(1,16);
    h_effNHits[0][2]->Draw();
-   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   // for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   for(int iwbc=startWBC; iwbc<=finalWBC; iwbc++) {
       if(h_effNHits[iwbc][0]->GetEntries() == 0) continue;
       g_effNHits[iwbc]->Draw("pe same");
    }
@@ -254,14 +265,30 @@ void tbAna::makePlots() {
    h_effSpill[0][2]->GetXaxis()->SetNoExponent();
    h_effSpill[0][2]->Draw();
    for(int iwbc=0; iwbc<nWBC; iwbc++) {
+   // for(int iwbc=startWBC; iwbc<=finalWBC; iwbc++) {
       if(h_effSpill[iwbc][0]->GetEntries() == 0) continue;
       g_effSpill[iwbc]->Draw("pe same");
    }
    leg->Draw();
    slide->SaveAs(Form("%s/eff_vs_spill_%s.%s",_outDir.c_str(),_testBoard.c_str(),plotExt));
 
+   //provile nhits vs flux
+   TProfile *p_nHitsFlux[nWBC];
+   for(int iwbc=startWBC; iwbc<=finalWBC; iwbc++) {
+      if(h_nHitsFlux[iwbc]->GetEntries() == 0) continue;
+      h_nHitsFlux[iwbc]->SetNdivisions(110,"Y");
+      h_nHitsFlux[iwbc]->SetNdivisions(110,"X");
+      p_nHitsFlux[iwbc] = h_nHitsFlux[iwbc]->ProfileX();
+      slide = util->newSlide(TString::Format("nhits_vs_flux_wbc%d_%s",WBCvalue[iwbc],_testBoard.c_str()),"");
+      slide->SetGrid();
+      p_nHitsFlux[iwbc]->SetStats(0);
+      p_nHitsFlux[iwbc]->Draw();
+      slide->SaveAs(Form("%s/nhits_vs_flux_wbc%d_%s.%s",_outDir.c_str(),WBCvalue[iwbc],_testBoard.c_str(),plotExt));
+   }
+
    for(int iD=0; iD<nD; iD++) {
       slide = util->newSlide(TString::Format("res%s_vs_spill_%s",D[iD],_testBoard.c_str()),"");
+      slide->SetGrid();
       TH2F *hSpaceRes = new TH2F("hSpaceRes", Form("Mean %s residual vs spill %s",D[iD],_testBoard.c_str()), _nSpills, _firstSpill-0.5, _finalSpill+0.5, 100, -0.01, 0.01);
       hSpaceRes->GetXaxis()->SetNoExponent();
       hSpaceRes->SetXTitle("Spill");
