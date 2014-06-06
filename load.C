@@ -16,7 +16,7 @@
 
    //load file and make plots
    ostringstream stream;
-   stream << "output_" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill << ".root";
+   stream << "output/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill << "/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill<< ".root";
    string filename = stream.str();
    ta->loadHistogramsFromFile(filename.c_str());
    ta->makePlots();
