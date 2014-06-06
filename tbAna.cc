@@ -343,6 +343,38 @@ void tbAna::makePlots() {
 
    }
 
+   TGraphAsymmErrors *g_tpSpill[_nSpills];
+   TH1F *s_tpSpill[_nSpills];
+   for(int ispill=_firstSpill; ispill<=_finalSpill; ispill++) {
+      int spillBin = 1 + ispill - _firstSpill;
+
+      g_tpSpill[spillBin-1] = new TGraphAsymmErrors();
+      s_tpSpill[spillBin-1] = NULL;
+      int wbc = 0;
+      for(int iwbc=0; iwbc<nWBC; iwbc++) {
+         TH1D *tpHits = h_tpSpill[iwbc][1]->ProjectionY("_py",spillBin,spillBin,"e");
+         TH1D *tpTrks = h_tpSpill[iwbc][0]->ProjectionY("_py",spillBin,spillBin,"e");
+         if(tpTrks->GetSumOfWeights() > 0) {
+            g_tpSpill[spillBin-1]->Divide(tpHits, tpTrks, "cl=0.683 b(1,1) mode");
+            wbc = WBCvalue[iwbc];
+            s_tpSpill[spillBin-1] = new TH1F(Form("h_tpSpill%d_wbc%d",ispill,wbc), 
+                                         Form("Efficiency vs trigger phase (%d, WBC %d)",ispill,wbc),
+                                         nPhases,-0.5,nPhases-0.5);
+            util->graphSetting(g_tpSpill[spillBin-1],s_tpSpill[spillBin-1],
+                               WBCcolor[iwbc],WBCstyle[iwbc],
+                               TString::Format("Trigger phase"),TString::Format("Efficiency"));
+            break;
+         }
+      }
+
+      if(s_tpSpill[spillBin-1] != NULL) {
+         slide = util->newSlide(TString::Format("eff_vs_tp_%d_wbc%d_%s",ispill,wbc,_testBoard.c_str()),"");
+         s_tpSpill[spillBin-1]->Draw();
+         g_tpSpill[spillBin-1]->Draw("pe same");
+         slide->SaveAs(Form("%s/eff_vs_tp_%d_wbc%d_%s.%s",_outDir.c_str(),ispill,wbc,_testBoard.c_str(),plotExt));
+      }
+   }
+
 }
 
 
