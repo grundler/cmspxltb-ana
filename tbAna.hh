@@ -29,6 +29,11 @@ public:
 
    void loadHistogramsFromFile(char* fname);
 
+   void useCorrectTriggerPhase(bool u=true) { use_correctTriggerPhase=u; };
+   void useFiducial(bool u=true) { use_isFiducial=u; };
+   void useSlope(bool u=true) { use_slopeCut=u; };
+   void setMaxFluxRatio(float r=5.) { maxFluxRatio=r; };
+
 private:
 
    bool setSlopeCut();
@@ -62,6 +67,10 @@ private:
    TCut isFiducial;
    int  correctTriggerPhase;
    float maxFluxRatio;
+
+   bool use_correctTriggerPhase;
+   bool use_isFiducial;
+   bool use_slopeCut;
 
    //Histograms and graphs
 

@@ -26,13 +26,15 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
      _firstSpill(spill0),
      _finalSpill(spill1),
      _nSpills(1+_finalSpill-_firstSpill),
-     _algo(algo)
+     _algo(algo),
+     maxFluxRatio(5.),
+     use_correctTriggerPhase(true),
+     use_isFiducial(true),
+     use_slopeCut(true)
 {
    //Set TCuts
    chi2_50 = "Chi2<50.";
    chi2_600 = "Chi2<600.";
-
-   maxFluxRatio = 5.;
 
    char tmptxt[256];
    sprintf(tmptxt,"((dut%s-fit%s_%d)<%f && (dut%s-fit%s_%d)>%f) && ((dut%s-fit%s_%d)<%f && (dut%s-fit%s_%d)>%f)",
@@ -47,7 +49,6 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
    stream << outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill;
    _outDir = stream.str();
    mkdir(_outDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-
 
    cout << "initialized tbAna\n";
 }
@@ -85,7 +86,12 @@ void tbAna::analyze(TCut myCut) {
          continue;
       }
 
-      TCut aCut = chi2_50 && slopeCut && isFiducial && myCut;
+      // TCut aCut = chi2_50 && slopeCut && isFiducial && myCut;
+      TCut aCut = chi2_50 && myCut;
+      if(use_slopeCut)
+         aCut += slopeCut;
+      if(use_isFiducial)
+         aCut += isFiducial;
       //aCut.Print();
       TCut bCut = aCut && nearTrack;
       //bCut.Print();
@@ -123,7 +129,7 @@ void tbAna::analyze(TCut myCut) {
          loadTrackEntry(entry);
 
          int TriggerPhase = _tc->getTriggerPhase(EvtNr);
-         if(TriggerPhase != correctTriggerPhase)
+         if(!use_correctTriggerPhase || TriggerPhase != correctTriggerPhase)
             continue;
 
          int qieevt = _tc->getQieEvent(EvtNr);
@@ -200,8 +206,8 @@ void tbAna::analyze(TCut myCut) {
 void tbAna::makePlots() {
    utils* util = new utils();
 
-   int startWBC = wbc140;
-   int finalWBC = wbc200;
+   int startWBC = wbc99;
+   int finalWBC = wbc255;
 
    TCanvas * slide;
 
@@ -454,10 +460,10 @@ bool tbAna::initSpill(int spill) {
    }
 
    //Set cuts
-   if(!setSlopeCut())
+   if(use_slopeCut && !setSlopeCut())
       return false;
 
-   if(!setFiducialCut())
+   if(use_isFiducial && !setFiducialCut())
       return false;
 
    //Get maps to correlate with triggerphase and qie trees
@@ -481,7 +487,7 @@ bool tbAna::initSpill(int spill) {
    }
 
    //Set one more cut
-   if(!setTriggerPhaseCut(spill))
+   if(use_correctTriggerPhase && !setTriggerPhaseCut(spill))
       return false;
 
    return true;
