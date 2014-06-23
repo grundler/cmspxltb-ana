@@ -77,8 +77,17 @@ tbAna::~tbAna() {
 
 void tbAna::analyze(TCut myCut) {
 
+   cout << "Running analysis of " << _testBoard << " spills " << _firstSpill << " to " << _finalSpill << endl;
+   cout << "\tDUT: " << _DUTID << endl;
+   cout << "\tQIE correlation algorithm: " << _algo << endl;
+   cout << "\tRequire correct trigger phase: " << use_correctTriggerPhase << endl;
+   cout << "\tRequire track to be fiducial: " << use_isFiducial << endl;
+   cout << "\tRequire low slope: " << use_slopeCut << endl;
+   cout << "\tMaximum flux ratio: " << maxFluxRatio << endl;
+   cout << endl;
+
    float maxFlux = 0.;
-   int maxEvt = 0;
+   int maxSpill = 0, maxEvt = 0;
 
    for(int iSpill=_firstSpill;  iSpill<=_finalSpill; iSpill++) {
       if(!initSpill(iSpill)) {
@@ -154,6 +163,7 @@ void tbAna::analyze(TCut myCut) {
 
          if(flux > maxFlux) { 
             maxFlux = flux;
+            maxSpill = iSpill;
             maxEvt = EvtNr;
          }
 
@@ -174,7 +184,7 @@ void tbAna::analyze(TCut myCut) {
       delete _tc;
    }
 
-   cout << "max flux seen: " << maxFlux << ", at event " << maxEvt << endl;
+   cout << "max flux seen: " << maxFlux << ", at spill/event " << maxSpill << "/" << maxEvt << endl;
 
    ostringstream stream;
    stream << _outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill << ".root";
@@ -599,10 +609,12 @@ bool tbAna::setTriggerPhaseCut(int spill) {
       loadTrackEntry(entry);      
 
       int TriggerPhase = _tc->getTriggerPhase(EvtNr);
+      // cout << "iEvt " << iEvt << ", event " << EvtNr << ", tp " << TriggerPhase;
       if(tpHits->Contains(entry)) {
          h_tpSpill[_wbcBin][1]->Fill(spill, TriggerPhase);
-         // std::cout << "iEvt " << iEvt << ", event " << EvtNr << ", tp " << TriggerPhase << ", has hit\n";
+         // cout << ", has hit";
       }
+      // cout << endl;
 
       h_tpSpill[_wbcBin][0]->Fill(spill, TriggerPhase);
    }
