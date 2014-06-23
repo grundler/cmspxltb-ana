@@ -14,6 +14,12 @@
    //create instance
    tbAna *ta = new tbAna(dutid,board,firstspill,finalspill,mapalgo);
 
+   //disable cuts
+   //ta->useCorrectTriggerPhase(false);
+   //ta->useFiducial(false);
+   //ta->useSlope(false);
+   //ta->setMaxFluxRatio(9999999.);
+
    //run analysis and make plots
    ta->analyze();
    ta->makePlots();
