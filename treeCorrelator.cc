@@ -75,8 +75,6 @@ void treeCorrelator::createMapLong() {
          }
       }
 
-      _tpMap[EventNumber] = TriggerPhase;
-
       if(fabs(TimeStamp - previousTime)>10000000&& TimeStamp>0 && previousTime>0 && iOffset<0.1*tree->GetEntries()) {
          currentTime = TimeStamp;
          if (iOffset+1<tree->GetEntries()) {
@@ -97,6 +95,8 @@ void treeCorrelator::createMapLong() {
    int previousDiff = -999;
    for(int itimestamp=0;itimestamp<tree->GetEntries();itimestamp++) {
       tree->GetEntry(itimestamp);
+      _tpMap[EventNumber] = TriggerPhase;
+
       // if(itimestamp%1000==0) 
       //    printf("\t\ttreeCorrelator on %1.3f %% (%i th : %i)\r",100.*itimestamp/tree->GetEntries(), itimestamp, TimeStamp);
       if(TimeStampOffset!=-1&&(TimeStamp - TimeStampOffset)>=0) {
