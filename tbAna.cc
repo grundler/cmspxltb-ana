@@ -129,7 +129,7 @@ void tbAna::analyze(TCut myCut) {
          loadTrackEntry(entry);
 
          int TriggerPhase = _tc->getTriggerPhase(EvtNr);
-         if(!use_correctTriggerPhase || TriggerPhase != correctTriggerPhase)
+         if(use_correctTriggerPhase && TriggerPhase != correctTriggerPhase)
             continue;
 
          int qieevt = _tc->getQieEvent(EvtNr);
@@ -631,6 +631,10 @@ bool tbAna::setTriggerPhaseCut(int spill) {
    correctTriggerPhase = tpMax;
    cout << "\tCorrect TriggerPhase is " << correctTriggerPhase << endl;
 
+   if(correctTriggerPhase == -1) {
+      cout << "ERROR: Somehow we didn't get a trigger phase\n";
+      return false;
+   }
    return true;
 }
 
