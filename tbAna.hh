@@ -1,3 +1,6 @@
+#ifndef TBANA_HH
+#define TBANA_HH
+
 #include <TCut.h>
 #include <TChain.h>
 #include <TMath.h>
@@ -5,14 +8,11 @@
 #include "constants.hh"
 
 class treeCorrelator;
-class TH1F;
-class TH2F;
+class plotter;
 
 using std::string;
 using std::vector;
 
-static const int nD = 2;
-static const char D[nD][2] = {"X","Y"};
 static const float resLo[nD] = {-0.5,-0.5};
 static const float resHi[nD] = {0.5,0.5};
 
@@ -23,11 +23,7 @@ public:
    ~tbAna();
    
    void analyze(TCut myCut="");
-   void makePlots();
-
    bool initSpill(int spill);
-
-   void loadHistogramsFromFile(char* fname);
 
    void useCorrectTriggerPhase(bool u=true) { use_correctTriggerPhase=u; };
    void useFiducial(bool u=true) { use_isFiducial=u; };
@@ -44,8 +40,6 @@ private:
    void loadTrackEntry(int entry);
 
    void getDUTFitPosition(float &posX, float &posY);
-
-   void bookHistos();
 
    //Basic information
    const string _testBoard;
@@ -73,22 +67,7 @@ private:
    bool use_slopeCut;
 
    //Histograms and graphs
-
-   //tracks, hits per flux to do efficiency, third histogram is filler for graph
-   //vs flux
-   TH1F *h_effFlux[nWBC][3]; 
-   TH1F *h_effNHits[nWBC][3]; 
-   TH2F *h_nHitsFlux[nWBC];
-
-   //vs spill
-   TH1F *h_effSpill[nWBC][3];
-
-   TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
-   TH2F *h_tpSpill[nWBC][2]; //for efficency vs trigger phase for each spill
-
-   //geometrical
-   TH2F *h_effMap[nWBC][3]; //tracks/hits/efficiency maps
-   TH2F *h_effMapWide[nWBC][3];
+   plotter* _plotter;
 
    //Tree information
 
@@ -123,3 +102,5 @@ Double_t g(Double_t *v, Double_t *par)
    if (gaus<=0) gaus=1e-10;
    return gaus;
 }
+
+#endif // #ifndef TBANA_HH

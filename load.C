@@ -2,22 +2,20 @@
    //Settings
    int dutid = 3;
    std::string board("PixelTestBoard1");
-   int firstspill = 176620;
-   int finalspill = 176997;
-   int mapalgo = 0;
+   int firstspill = 179410;
+   int finalspill = 179620;
 
    //compile macros
-   gSystem->CompileMacro("treeCorrelator.cc","k");
-   gSystem->CompileMacro("utils.cc","k");
-   gSystem->CompileMacro("tbAna.cc","k");
-
-   //create instance
-   tbAna *ta = new tbAna(dutid,board,firstspill,finalspill,mapalgo);
+   gSystem->CompileMacro("plotter.cc","k");
 
    //load file and make plots
    ostringstream stream;
-   stream << "output/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill << "/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill<< ".root";
+   stream << "output/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill;
+   string outdir = stream.str();
+   stream << "/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill<< ".root";
    string filename = stream.str();
-   ta->loadHistogramsFromFile(filename.c_str());
-   ta->makePlots();
+
+   plotter *p = new plotter(firstspill,finalspill,outdir);
+   p->loadHistogramsFromFile(filename.c_str());
+   p->makePlots();
 }

@@ -2,13 +2,13 @@
    //Settings
    int dutid = 3;
    std::string board("PixelTestBoard1");
-   int firstspill = 176620;
-   int finalspill = 176997;
+   int firstspill = 179410;
+   int finalspill = 179620;
    int mapalgo = 0;
 
    //compile macros
    gSystem->CompileMacro("treeCorrelator.cc","k");
-   gSystem->CompileMacro("utils.cc","k");
+   gSystem->CompileMacro("plotter.cc","k");
    gSystem->CompileMacro("tbAna.cc","k");
 
    //create instance
@@ -20,7 +20,7 @@
    //ta->useSlope(false);
    //ta->setMaxFluxRatio(9999999.);
 
-   //run analysis and make plots
+   //run analysis
    ta->analyze();
-   ta->makePlots();
+
 }

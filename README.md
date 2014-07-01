@@ -10,7 +10,7 @@ There are three classes:
 	  treeCorrelator - used to correlate information from QIE summary and trigger phase trees to the track tree
 	  				 Called by tbAna
 
-	  utils - used for plot settings			 
+	  plotter - used for storing histograms and creating plots			 
 
 constants.hh contains a const static char variable, subdir, indicating the directory where root files are at.
 			 track trees assumed to be at "subdir/<TestBoardName>/histograms/<spill>-tracks.root"
