@@ -30,6 +30,8 @@ public:
    void useSlope(bool u=true) { use_slopeCut=u; };
    void setMaxFluxRatio(float r=5.) { maxFluxRatio=r; };
 
+   plotter* getPlotter() { return _plotter; };
+
 private:
 
    bool setSlopeCut();

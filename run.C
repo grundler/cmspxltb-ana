@@ -23,4 +23,6 @@
    //run analysis
    ta->analyze();
 
+   //make plots
+   ta->getPlotter()->makePlots();
 }
