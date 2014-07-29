@@ -18,7 +18,7 @@ public:
    plotter(int spill0, int spill1, string outdir);
    ~plotter();
 
-   void graphSetting(TGraph* g, TString name, TString title="", 
+   TH1F* graphSetting(TGraph* g, TString name, TString title="", 
                      int color=-1, int style=-1, 
                      TString xTitle="", TString yTitle="");
    void graphSetting(TGraph* g, TH1F* h,
@@ -36,14 +36,15 @@ public:
 
    //Histograms and graphs
 
-   //tracks, hits per flux to do efficiency, third histogram is filler for graph
+   //tracks, hits per flux to do efficiency
+
    //vs flux
-   TH1F *h_effFlux[nWBC][3]; 
-   TH1F *h_effNHits[nWBC][3]; 
+   TH2F *h_effFlux[nWBC][2]; 
+   TH2F *h_effNHits[nWBC][2]; 
    TH2F *h_nHitsFlux[nWBC];
 
    //vs spill
-   TH1F *h_effSpill[nWBC][3];
+   TH1F *h_effSpill[nWBC][2];
 
    TH1F *h_resSpill[nWBC][nD][2]; //mean and sigma of residuals per spill 
    TH2F *h_tpSpill[nWBC][2]; //for efficency vs trigger phase for each spill

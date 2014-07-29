@@ -131,8 +131,8 @@ void tbAna::analyze(TCut myCut) {
          if(ratio > maxFluxRatio) continue;
 
          //Track has passed, fill track-level information
-         _plotter->h_effFlux[_wbcBin][0]->Fill(flux);
-         _plotter->h_effNHits[_wbcBin][0]->Fill(nhits_4);
+         _plotter->h_effFlux[_wbcBin][0]->Fill(iSpill,flux);
+         _plotter->h_effNHits[_wbcBin][0]->Fill(iSpill,nhits_4);
          _plotter->h_effSpill[_wbcBin][0]->Fill(iSpill);
          _plotter->h_nHitsFlux[_wbcBin]->Fill(flux,nhits_4);
 
@@ -151,8 +151,8 @@ void tbAna::analyze(TCut myCut) {
          //If hit on track, fill hit-level information
          if(goodHits->Contains(entry)) {
             // cout << "\t\t\tgoodHit\n";
-            _plotter->h_effFlux[_wbcBin][1]->Fill(flux);
-            _plotter->h_effNHits[_wbcBin][1]->Fill(nhits_4);
+            _plotter->h_effFlux[_wbcBin][1]->Fill(iSpill,flux);
+            _plotter->h_effNHits[_wbcBin][1]->Fill(iSpill,nhits_4);
             _plotter->h_effSpill[_wbcBin][1]->Fill(iSpill);
 
             _plotter->h_effMap[_wbcBin][1]->Fill(dutFitX, dutFitY);
