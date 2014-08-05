@@ -255,10 +255,10 @@ void plotter::writeFile(string filename) {
    f->Close();
 }
 
-void plotter::makePlots() {
+void plotter::makePlots(int startWBC, int finalWBC) {
 
-   int startWBC = wbc140;
-   int finalWBC = wbc175;
+   // int startWBC = wbc140;
+   // int finalWBC = wbc175;
 
    TCanvas * slide;
 
@@ -491,5 +491,98 @@ void plotter::makePlots() {
          slide->SaveAs(Form("%s/eff_vs_tp_%d_wbc%d.%s",_outDir.c_str(),ispill,wbc,plotExt));
       }
    }
+
+}
+
+void plotter::compareSpills(int wbc, vector<int> spillList) {
+
+   int wbcBin=-1;
+   cout << "  WBC=" << wbc << endl;
+   for(int iwbc=0; iwbc<nWBC; iwbc++) {
+      if(wbc == WBCvalue[iwbc]) {
+         wbcBin=iwbc;
+         break;
+      }
+   }
+   if(wbcBin < 0) {
+      cout << "\tCould not find proper WBC bin\n";
+      return;
+   }
+
+   TCanvas * slide;
+
+   char slideT[256], slideN[256], slideF[256];
+
+   const int nSpills = (int) spillList.size();
+   if (nSpills < 2) return; //what are we comparing?
+
+   TGraphAsymmErrors *g_effFlux[nSpills];
+   TGraphAsymmErrors *g_effNHits[nSpills];
+
+   TH1D *effFlux[nSpills][2];
+   TH1F *hFlux[nSpills];
+
+   TH1D *effNHits[nSpills][2];
+   TH1F *hNHits[nSpills];
+
+   const int nFluxBins = 8;
+   double fluxBins[nFluxBins+1] = {0., 20., 30., 40., 50., 70., 100., 150., 250.};//, 1000.}; 
+
+   for(int iSpill=0; iSpill<nSpills; iSpill++) {
+      int spillBin = 1 + spillList[iSpill] - _firstSpill;
+      for(int i=0; i<2; i++) {
+         TH1D *htmp = h_effFlux[wbcBin][i]->ProjectionY("_py",spillBin,spillBin,"e");
+         effFlux[iSpill][i] = (TH1D*) htmp->Rebin(nFluxBins,Form("%s_%d",h_effFlux[wbcBin][i]->GetName(),spillList[iSpill]),fluxBins);
+
+         effNHits[iSpill][i] = h_effNHits[wbcBin][i]->ProjectionY("_py",spillBin,spillBin,"e");
+      }
+
+      g_effFlux[iSpill] = new TGraphAsymmErrors();
+      g_effFlux[iSpill]->Divide(effFlux[iSpill][1],effFlux[iSpill][0],"cl=0.683 b(1,1) mode");
+      hFlux[iSpill] = new TH1F(Form("h_effFlux_spill%d_efficiency",spillList[iSpill]), 
+                             "Efficiency vs Flux", 
+                             effFlux[iSpill][0]->GetNbinsX(),
+                             effFlux[iSpill][0]->GetXaxis()->GetXmin(),
+                             effFlux[iSpill][0]->GetXaxis()->GetXmax());
+      graphSetting(g_effFlux[iSpill], hFlux[iSpill],
+                   WBCcolor[iSpill],WBCstyle[iSpill],
+                   TString::Format("Flux"),TString::Format("Efficiency"));
+
+      g_effNHits[iSpill] = new TGraphAsymmErrors();
+      g_effNHits[iSpill]->Divide(effNHits[iSpill][1],effNHits[iSpill][0],"cl=0.683 b(1,1) mode");
+      hNHits[iSpill] = new TH1F(Form("h_effNHits_spill%d_efficiency",spillList[iSpill]), 
+                             "Efficiency vs NHits", 
+                             effNHits[iSpill][0]->GetNbinsX(),
+                             effNHits[iSpill][0]->GetXaxis()->GetXmin(),
+                             effNHits[iSpill][0]->GetXaxis()->GetXmax());
+      graphSetting(g_effNHits[iSpill], hNHits[iSpill],
+                   WBCcolor[iSpill],WBCstyle[iSpill],
+                   TString::Format("NHits"),TString::Format("Efficiency"));
+   }
+
+   slide = newSlide("eff_vs_flux","");
+
+   TLegend* leg = new TLegend(0.15,0.20,0.38,0.41);
+   legendSetting(leg);
+
+   hFlux[0]->GetXaxis()->SetRangeUser(0.,250.);
+   hFlux[0]->Draw();
+   for(int iSpill=0; iSpill<nSpills; iSpill++) {
+      if(effFlux[iSpill][0]->GetEntries() == 0) continue;
+      g_effFlux[iSpill]->Draw("pe same");
+      leg->AddEntry(g_effFlux[iSpill],Form("%d",spillList[iSpill]),"p");
+   }
+   leg->Draw();
+   slide->SaveAs(Form("%s/eff_vs_flux_bySpill.%s",_outDir.c_str(),plotExt));
+
+   slide = newSlide("eff_vs_nhits","");
+   hNHits[0]->GetXaxis()->SetRange(1,16);
+   hNHits[0]->Draw();
+   for(int iSpill=0; iSpill<nSpills; iSpill++) {
+      if(effNHits[iSpill][0]->GetEntries() == 0) continue;
+      g_effNHits[iSpill]->Draw("pe same");
+   }
+   leg->Draw();
+   slide->SaveAs(Form("%s/eff_vs_nhits_bySpill.%s",_outDir.c_str(),plotExt));
 
 }

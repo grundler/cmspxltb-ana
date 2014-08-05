@@ -12,6 +12,7 @@ class TGraph;
 class TLegend;
 
 using std::string;
+using std::vector;
 
 class plotter {
 public:
@@ -29,7 +30,8 @@ public:
    void legendSetting(TLegend* l);
 
    void bookHistos();
-   void makePlots();
+   void makePlots(int startWBC=wbc99, int finalWBC=wbc255);
+   void compareSpills(int wbc, vector<int> spillList);
 
    void writeFile(string filename);
    void loadHistogramsFromFile(char* fname);

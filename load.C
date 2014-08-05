@@ -18,4 +18,9 @@
    plotter *p = new plotter(firstspill,finalspill,outdir);
    p->loadHistogramsFromFile(filename.c_str());
    p->makePlots();
+   // std::vector<int> v;
+   // v.push_back(179423);
+   // v.push_back(179425);
+   // v.push_back(179430);
+   // p->compareSpills(159,v);
 }
