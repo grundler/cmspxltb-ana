@@ -98,15 +98,6 @@ void plotter::graphSetting(TGraph* g, TH1F* h,
 }
 
 
-void plotter::spacerSetting(TH2* h, TGraph* g) {
-
-   h->SetXTitle(g->GetXaxis()->GetTitle());
-   h->SetYTitle(g->GetYaxis()->GetTitle());
-
-   h->GetYaxis()->SetTitleOffset(0.8);
-   h->SetStats(0);
-}
-
 TCanvas* plotter::newSlide(TString name, TString title) {
    TCanvas* slide = new TCanvas(name, title, 0, 0, 700, 500);
 
