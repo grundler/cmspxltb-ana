@@ -4,6 +4,7 @@
    std::string board("PixelTestBoard1");
    int firstspill = 179410;
    int finalspill = 179620;
+   std::string suffix("fixedWindow");
    int mapalgo = 0;
 
    //compile macros
@@ -12,7 +13,7 @@
    gSystem->CompileMacro("tbAna.cc","k");
 
    //create instance
-   tbAna *ta = new tbAna(dutid,board,firstspill,finalspill,mapalgo);
+   tbAna *ta = new tbAna(dutid,board,firstspill,finalspill,suffix,mapalgo);
 
    //disable cuts
    //ta->useCorrectTriggerPhase(false);

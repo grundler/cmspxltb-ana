@@ -19,7 +19,7 @@ static const float resHi[nD] = {0.5,0.5};
 class tbAna {
 public:
    
-   tbAna(int dutID, string board, int spill0, int spill1, int algo=0);
+   tbAna(int dutID, string board, int spill0, int spill1, string suffix="", int algo=0);
    ~tbAna();
    
    void analyze(TCut myCut="");
@@ -49,6 +49,7 @@ private:
    const int _firstSpill;
    const int _finalSpill;
    const int _nSpills;
+   const string _suffix;
    const int _algo;
    string _outDir;
 

@@ -19,12 +19,13 @@
 
 using namespace std;
 
-tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo) 
+tbAna::tbAna(int dutID, string board, int spill0, int spill1, string suffix, int algo) 
    : _testBoard(board),
      _DUTID(dutID),
      _firstSpill(spill0),
      _finalSpill(spill1),
      _nSpills(1+_finalSpill-_firstSpill),
+     _suffix(suffix),
      _algo(algo),
      maxFluxRatio(5.),
      use_correctTriggerPhase(true),
@@ -43,6 +44,8 @@ tbAna::tbAna(int dutID, string board, int spill0, int spill1, int algo)
 
    ostringstream stream;
    stream << outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill;
+   if(!_suffix.empty())
+      stream << "_" << _suffix;
    _outDir = stream.str();
    mkdir(_outDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 
@@ -168,7 +171,8 @@ void tbAna::analyze(TCut myCut) {
    cout << "max flux seen: " << maxFlux << ", at spill/event " << maxSpill << "/" << maxEvt << endl;
 
    ostringstream stream;
-   stream << _outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill << ".root";
+   // stream << _outDir << "/" << _testBoard << "_DUT" << _DUTID << "_" << _firstSpill << "-" << _finalSpill << ".root";
+   stream << _outDir << "/ana.root";
    string filename = stream.str();
    _plotter->writeFile(filename);
 }

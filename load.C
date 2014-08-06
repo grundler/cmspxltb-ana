@@ -4,6 +4,7 @@
    std::string board("PixelTestBoard1");
    int firstspill = 179410;
    int finalspill = 179620;
+   std::string suffix("");
 
    //compile macros
    gSystem->CompileMacro("plotter.cc","k");
@@ -11,6 +12,8 @@
    //load file and make plots
    ostringstream stream;
    stream << "output/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill;
+   if(!suffix.empty())
+      stream << "_" << suffix;
    string outdir = stream.str();
    stream << "/" << board << "_DUT" << dutid << "_" << firstspill << "-" << finalspill<< ".root";
    string filename = stream.str();
